@@ -69,24 +69,64 @@ export function buildChatSystemPrompt(ctx: SkillContext, lang: string): string {
         ];
 
     const toolsHeader = isPt ? "## Ferramentas" : "## Tools";
+    const languageRule = isPt
+        ? [
+            "## Idioma",
+            "- Respostas em texto (chat): use o idioma da última mensagem do usuário.",
+            "- Código: siga SEMPRE os padrões e o idioma já usados no arquivo/projeto.",
+            "- Não traduza identificadores, comentários, strings i18n ou mensagens de log só porque o usuário escreveu em português."
+        ]
+        : [
+            "## Language",
+            "- Text replies (chat): use the language of the user's last message.",
+            "- Code: ALWAYS follow the patterns and language already used in the file/project.",
+            "- Do not translate identifiers, comments, i18n strings, or log messages just because the user wrote in another language."
+        ];
+
+    const fileRules = isPt
+        ? [
+            "## Edição de arquivos (estratégia preferida)",
+            "- Arquivo JÁ EXISTE → read_file, depois find_and_replace com old_string copiado exatamente do arquivo.",
+            "- NUNCA use write_file em arquivo existente.",
+            "- write_file só para arquivos NOVOS.",
+            "- find_and_replace: old_string deve ser único no arquivo; inclua linhas de contexto se preciso.",
+            "- Diffs mínimos: uma mudança por find_and_replace quando possível.",
+            "- Sem placeholders (\"...\", \"conteúdo atualizado\", etc.)."
+        ]
+        : [
+            "## File editing (preferred strategy)",
+            "- File ALREADY EXISTS → read_file, then find_and_replace with old_string copied exactly from the file.",
+            "- NEVER use write_file on an existing file.",
+            "- write_file only for NEW files.",
+            "- find_and_replace: old_string must be unique; include surrounding lines for context if needed.",
+            "- Minimal diffs: one change per find_and_replace when possible.",
+            "- No placeholders (\"...\", \"updated content\", etc.)."
+        ];
+
     const usage = isPt
         ? [
-            "Para usar uma ferramenta, responda APENAS com blocos <tool_call> JSON (sem texto extra):",
+            "Para usar ferramentas, responda SOMENTE com blocos <tool_call> JSON — sem texto misturado:",
             ...examples,
-            "Após receber <tool_result>, continue até concluir a tarefa.",
+            "O usuário não vê os blocos <tool_call>; ele vê apenas o status da ferramenta.",
+            "Após <tool_result>, continue até concluir.",
             "Quando terminar, responda em texto normal sem <tool_call>."
         ]
         : [
-            "To use a tool, respond ONLY with <tool_call> JSON blocks (no extra text):",
+            "To use tools, respond ONLY with <tool_call> JSON blocks — no mixed prose:",
             ...examples,
-            "After receiving <tool_result>, continue until the task is done.",
+            "The user does not see <tool_call> blocks; they only see tool status.",
+            "After <tool_result>, continue until done.",
             "When finished, reply in plain text without <tool_call>."
         ];
 
     return [
         ...intro,
         "",
+        ...languageRule,
+        "",
         ...buildPlanningGuidance(lang),
+        "",
+        ...fileRules,
         "",
         toolsHeader,
         ...toolLines,

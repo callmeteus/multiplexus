@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
-import { resolveSkillDir } from "../SkillPathUtils";
-import { Skill, SkillContext, ToolResult } from "../Types";
+import { resolveSkillDir } from "../../../utils/SkillPathUtils";
+import { Skill, SkillContext, ToolResult } from "../../Types";
 
 const MAX_OUTPUT = 512 * 1024;
 const TIMEOUT_MS = 120_000;

@@ -10,6 +10,7 @@ import {
     hasToolCalls,
     SkillContext
 } from "../chat/skills";
+import { detectUserLang, formatToolLabel, isToolOnlyMessage, printTransientOutput } from "../chat/ToolDisplay";
 import { resolveBackend } from "../config/BackendResolution";
 import { ensureCredentials } from "../config/LocalConfig";
 import { t } from "../i18n/index";
@@ -45,8 +46,7 @@ export async function chatWizard(apiClient: ApiClient) {
     const resolution = resolveBackend();
     const projectRoot = resolution?.projectRoot ?? process.cwd();
     const cwd = process.cwd();
-    const isPt = t.menu.welcome.includes("Bem-vindo");
-    const lang = isPt ? "pt" : "en";
+    const defaultLang = t.menu.welcome.includes("Bem-vindo") ? "pt" : "en";
 
     const rl = readline.createInterface({
         input: process.stdin,
@@ -55,6 +55,7 @@ export async function chatWizard(apiClient: ApiClient) {
     });
 
     let activeSpinner: ReturnType<typeof clack.spinner> | null = null;
+    let sessionLang = defaultLang;
 
     const skillContext: SkillContext = {
         projectRoot,
@@ -69,6 +70,10 @@ export async function chatWizard(apiClient: ApiClient) {
                 message = t.chat.approveCommand
                     .replace("{command}", args.command ?? "")
                     .replace("{cwd}", args.cwd || cwd);
+            } else if (skillName === "write_file") {
+                message = sessionLang === "pt"
+                    ? `Escrever/sobrescrever arquivo?\n${args.path}`
+                    : `Write/overwrite file?\n${args.path}`;
             }
 
             const approved = await clack.confirm({ message });
@@ -86,7 +91,7 @@ export async function chatWizard(apiClient: ApiClient) {
     console.log();
 
     const messages: { role: string; content: string }[] = [
-        { role: "system", content: buildChatSystemPrompt(skillContext, lang) }
+        { role: "system", content: buildChatSystemPrompt(skillContext, sessionLang) }
     ];
 
     rl.prompt();
@@ -104,6 +109,8 @@ export async function chatWizard(apiClient: ApiClient) {
             return;
         }
 
+        sessionLang = detectUserLang(input);
+        messages[0] = { role: "system", content: buildChatSystemPrompt(skillContext, sessionLang) };
         messages.push({ role: "user", content: input });
 
         const spinner = clack.spinner();
@@ -148,21 +155,33 @@ export async function chatWizard(apiClient: ApiClient) {
                 }
 
                 let headerPrinted = false;
-                const { text: assistantResponse } = await consumeChatStream(response, () => {
-                    spinner.stop("");
-                    if (!headerPrinted) {
-                        process.stdout.write(`${formatModelLabel(model, lastProvider, lastTargetModel)} ${chalk.gray(">")} `);
-                        headerPrinted = true;
+                const { text: assistantResponse } = await consumeChatStream(response, {
+                    onFirstVisibleToken: () => {
+                        spinner.stop("");
+                        if (!headerPrinted) {
+                            process.stdout.write(`${formatModelLabel(model, lastProvider, lastTargetModel)} ${chalk.gray(">")} `);
+                            headerPrinted = true;
+                        }
+                    },
+                    onTextUpdate: (_full, delta) => {
+                        process.stdout.write(delta);
                     }
                 });
 
-                if (!headerPrinted) {
+                const toolOnly = isToolOnlyMessage(assistantResponse);
+
+                if (!headerPrinted && !toolOnly) {
                     spinner.stop("");
                     process.stdout.write(`${formatModelLabel(model, lastProvider, lastTargetModel)} ${chalk.gray(">")} `);
+                    headerPrinted = true;
+                } else if (toolOnly) {
+                    spinner.stop("");
                 }
 
-                console.log();
-                console.log();
+                if (headerPrinted) {
+                    console.log();
+                    console.log();
+                }
 
                 if (!assistantResponse) {
                     break;
@@ -174,15 +193,27 @@ export async function chatWizard(apiClient: ApiClient) {
                     break;
                 }
 
-                const toolResults = await executeToolCalls(skillContext, assistantResponse);
+                const toolSpinner = clack.spinner();
+                activeSpinner = toolSpinner;
 
-                for (const result of toolResults) {
-                    const status = result.ok ? chalk.green("✓") : chalk.red("✗");
-                    console.log(chalk.gray(`${status} ${result.name}: ${result.output.split("\n")[0]}`));
-                }
+                const toolResults = await executeToolCalls(skillContext, assistantResponse, {
+                    onStart: (call) => {
+                        toolSpinner.start(formatToolLabel(call.name, call.arguments));
+                    },
+                    onEnd: (call, result) => {
+                        if (call.name === "run_command" && result.output) {
+                            printTransientOutput(result.output);
+                        }
 
+                        const status = result.ok ? chalk.green("✓") : chalk.red("✗");
+                        toolSpinner.stop(`${status} ${formatToolLabel(call.name, call.arguments)}`);
+                    }
+                });
+
+                activeSpinner = null;
                 messages.push({ role: "user", content: formatToolResults(toolResults) });
-                spinner.start(t.chat.runningTools);
+                spinner.start(t.chat.thinking);
+                activeSpinner = spinner;
             }
         } catch (err: any) {
             spinner.stop("");

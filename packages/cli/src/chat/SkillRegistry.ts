@@ -1,13 +1,13 @@
-import { listDirSkill } from "./skills/ListDirSkill";
-import { readFileSkill } from "./skills/ReadFileSkill";
-import { runCommandSkill } from "./skills/RunCommandSkill";
-import { searchReplaceSkill } from "./skills/SearchReplaceSkill";
+import { findAndReplaceSkill } from "./skills/find-and-replace";
+import { listDirSkill } from "./skills/list-dir";
+import { readFileSkill } from "./skills/read-file";
+import { runCommandSkill } from "./skills/run-command";
 import { Skill } from "./Types";
-import { writeFileSkill } from "./skills/WriteFileSkill";
+import { writeFileSkill } from "./skills/write-file";
 
 /** All registered chat skills, keyed by name. */
 export const SKILL_REGISTRY: ReadonlyMap<string, Skill> = new Map(
-    [readFileSkill, writeFileSkill, searchReplaceSkill, listDirSkill, runCommandSkill].map(s => [s.name, s])
+    [readFileSkill, findAndReplaceSkill, writeFileSkill, listDirSkill, runCommandSkill].map(s => [s.name, s])
 );
 
 /**

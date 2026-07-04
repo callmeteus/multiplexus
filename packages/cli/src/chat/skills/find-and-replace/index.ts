@@ -1,14 +1,14 @@
 import * as fs from "fs";
-import { resolveSkillPath } from "../SkillPathUtils";
-import { Skill, SkillContext, ToolResult } from "../Types";
+import { resolveSkillPath } from "../../../utils/SkillPathUtils";
+import { Skill, SkillContext, ToolResult } from "../../Types";
 
 /**
- * Replaces a unique string occurrence inside a file.
+ * Preferred way to edit existing files: swap one unique, exact snippet for another.
  */
-export const searchReplaceSkill: Skill = {
-    name: "search_replace",
-    description: "Replace a unique old_string with new_string in a file",
-    example: '{"name":"search_replace","arguments":{"path":"...","old_string":"...","new_string":"..."}}',
+export const findAndReplaceSkill: Skill = {
+    name: "find_and_replace",
+    description: "Edit existing files — replace one unique old_string with new_string (preferred over write_file)",
+    example: '{"name":"find_and_replace","arguments":{"path":"packages/cli/src/index.ts","old_string":"const x = 1;","new_string":"const x = 2;"}}',
 
     execute(args: Record<string, string>, ctx: SkillContext): ToolResult {
         try {
@@ -17,13 +17,17 @@ export const searchReplaceSkill: Skill = {
             const newString = args.new_string ?? "";
             const content = fs.readFileSync(target, "utf-8");
 
+            if (!oldString) {
+                throw new Error("old_string is required");
+            }
+
             if (!content.includes(oldString)) {
                 throw new Error("old_string not found in file");
             }
 
             const occurrences = content.split(oldString).length - 1;
             if (occurrences > 1) {
-                throw new Error("old_string is not unique in file");
+                throw new Error("old_string is not unique — include more surrounding context");
             }
 
             fs.writeFileSync(target, content.replace(oldString, newString), "utf-8");

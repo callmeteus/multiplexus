@@ -70,13 +70,24 @@ export async function executeToolCall(ctx: SkillContext, call: ToolCall): Promis
  * Executes all tool calls from an assistant message.
  * @param ctx The skill runtime context.
  * @param content The assistant message containing tool calls.
+ * @param hooks Optional per-tool UI hooks.
  * @returns Tool execution results.
  */
-export async function executeToolCalls(ctx: SkillContext, content: string): Promise<ToolResult[]> {
+export async function executeToolCalls(
+    ctx: SkillContext,
+    content: string,
+    hooks?: {
+        onStart?: (call: ToolCall) => void;
+        onEnd?: (call: ToolCall, result: ToolResult) => void;
+    }
+): Promise<ToolResult[]> {
     const results: ToolResult[] = [];
 
     for (const call of parseToolCalls(content)) {
-        results.push(await executeToolCall(ctx, call));
+        hooks?.onStart?.(call);
+        const result = await executeToolCall(ctx, call);
+        hooks?.onEnd?.(call, result);
+        results.push(result);
     }
 
     return results;
