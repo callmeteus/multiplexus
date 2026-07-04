@@ -42,8 +42,10 @@ export const pt: Dictionary = {
         thinking: "Pensando...",
         responding: "{model} via {provider} está digitando...",
         runningTools: "Executando ferramentas...",
-        skillsHint: "Skills de código ativas: read_file, write_file, search_replace, list_dir",
-        cwdHint: "cwd: {cwd}"
+        skillsHint: "Skills: read_file, write_file, search_replace, list_dir, run_command (requer aprovação)",
+        cwdHint: "cwd: {cwd}",
+        approveCommand: "Executar este comando?\n{command}\n(cwd: {cwd})",
+        approveSkill: "Permitir execução da skill '{skill}'?"
     },
 
     provider: {

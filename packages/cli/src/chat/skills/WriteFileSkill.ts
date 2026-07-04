@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
-import { resolveSkillPath } from "./pathUtils";
-import { Skill, SkillContext, ToolResult } from "./types";
+import { resolveSkillPath } from "../SkillPathUtils";
+import { Skill, SkillContext, ToolResult } from "../Types";
 
 /**
  * Writes or overwrites a text file in the project.

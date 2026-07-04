@@ -1,6 +1,6 @@
 import * as fs from "fs";
-import { resolveSkillPath } from "./pathUtils";
-import { Skill, SkillContext, ToolResult } from "./types";
+import { resolveSkillPath } from "../SkillPathUtils";
+import { Skill, SkillContext, ToolResult } from "../Types";
 
 /**
  * Lists files and directories at a path.

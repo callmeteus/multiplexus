@@ -1,5 +1,5 @@
 import * as path from "path";
-import { SkillContext } from "./types";
+import { SkillContext } from "./skills/types";
 
 /**
  * Resolves a user-supplied path relative to cwd, constrained to the project root.
@@ -22,5 +22,16 @@ export function resolveSkillPath(ctx: SkillContext, filePath: string): string {
         throw new Error(`Path outside project root: ${filePath}`);
     }
 
+    return resolved;
+}
+
+/**
+ * Resolves a directory path relative to cwd, constrained to the project root.
+ * @param ctx The skill runtime context.
+ * @param dirPath Optional directory path; defaults to cwd.
+ * @returns The resolved absolute directory path.
+ */
+export function resolveSkillDir(ctx: SkillContext, dirPath?: string): string {
+    const resolved = dirPath ? resolveSkillPath(ctx, dirPath) : path.resolve(ctx.cwd);
     return resolved;
 }

@@ -44,12 +44,38 @@ export async function chatWizard(apiClient: ApiClient) {
     const model = selectedModel as string;
     const resolution = resolveBackend();
     const projectRoot = resolution?.projectRoot ?? process.cwd();
-    const skillContext: SkillContext = {
-        projectRoot,
-        cwd: process.cwd()
-    };
+    const cwd = process.cwd();
     const isPt = t.menu.welcome.includes("Bem-vindo");
     const lang = isPt ? "pt" : "en";
+
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+        prompt: chalk.blue.bold(t.chat.prompt)
+    });
+
+    let activeSpinner: ReturnType<typeof clack.spinner> | null = null;
+
+    const skillContext: SkillContext = {
+        projectRoot,
+        cwd,
+        approve: async (skillName, args) => {
+            rl.pause();
+            activeSpinner?.stop("");
+
+            let message = t.chat.approveSkill.replace("{skill}", skillName);
+
+            if (skillName === "run_command") {
+                message = t.chat.approveCommand
+                    .replace("{command}", args.command ?? "")
+                    .replace("{cwd}", args.cwd || cwd);
+            }
+
+            const approved = await clack.confirm({ message });
+            rl.resume();
+            return approved === true;
+        }
+    };
 
     console.clear();
     console.log(chalk.bold.cyan("=================================================="));
@@ -64,12 +90,6 @@ export async function chatWizard(apiClient: ApiClient) {
     const messages: { role: string; content: string }[] = [
         { role: "system", content: buildChatSystemPrompt(skillContext, lang) }
     ];
-
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-        prompt: chalk.blue.bold(t.chat.prompt)
-    });
 
     rl.prompt();
 
@@ -89,6 +109,7 @@ export async function chatWizard(apiClient: ApiClient) {
         messages.push({ role: "user", content: input });
 
         const spinner = clack.spinner();
+        activeSpinner = spinner;
         spinner.start(t.chat.thinking);
 
         try {
@@ -155,7 +176,7 @@ export async function chatWizard(apiClient: ApiClient) {
                     break;
                 }
 
-                const toolResults = executeToolCalls(skillContext, assistantResponse);
+                const toolResults = await executeToolCalls(skillContext, assistantResponse);
 
                 for (const result of toolResults) {
                     const status = result.ok ? chalk.green("✓") : chalk.red("✗");
@@ -167,11 +188,13 @@ export async function chatWizard(apiClient: ApiClient) {
             }
         } catch (err: any) {
             spinner.stop("");
+            activeSpinner = null;
             console.log(chalk.red(`\n${t.chat.error.replace("{message}", err.message)}`));
             messages.pop();
         }
 
         rl.prompt();
+        activeSpinner = null;
     });
 
     rl.on("SIGINT", () => {

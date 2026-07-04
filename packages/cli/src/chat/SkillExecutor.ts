@@ -1,5 +1,5 @@
-import { SKILL_REGISTRY } from "./SkillRegistry";
-import { SkillContext, ToolCall, ToolResult } from "./types";
+import { SKILL_REGISTRY } from "./skills/SkillRegistry";
+import { SkillContext, ToolCall, ToolResult } from "./skills/types";
 
 const TOOL_CALL_RE = /<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/g;
 
@@ -45,14 +45,25 @@ export function hasToolCalls(content: string): boolean {
  * @param call The tool call to execute.
  * @returns The tool execution result.
  */
-export function executeToolCall(ctx: SkillContext, call: ToolCall): ToolResult {
+export async function executeToolCall(ctx: SkillContext, call: ToolCall): Promise<ToolResult> {
     const skill = SKILL_REGISTRY.get(call.name);
 
     if (!skill) {
         return { name: call.name, ok: false, output: `Unknown tool: ${call.name}` };
     }
 
-    return skill.execute(call.arguments, ctx);
+    if (skill.requiresApproval) {
+        if (!ctx.approve) {
+            return { name: call.name, ok: false, output: "Approval handler not available" };
+        }
+
+        const approved = await ctx.approve(skill.name, call.arguments);
+        if (!approved) {
+            return { name: call.name, ok: false, output: "User rejected execution" };
+        }
+    }
+
+    return await Promise.resolve(skill.execute(call.arguments, ctx));
 }
 
 /**
@@ -61,8 +72,14 @@ export function executeToolCall(ctx: SkillContext, call: ToolCall): ToolResult {
  * @param content The assistant message containing tool calls.
  * @returns Tool execution results.
  */
-export function executeToolCalls(ctx: SkillContext, content: string): ToolResult[] {
-    return parseToolCalls(content).map(call => executeToolCall(ctx, call));
+export async function executeToolCalls(ctx: SkillContext, content: string): Promise<ToolResult[]> {
+    const results: ToolResult[] = [];
+
+    for (const call of parseToolCalls(content)) {
+        results.push(await executeToolCall(ctx, call));
+    }
+
+    return results;
 }
 
 /**

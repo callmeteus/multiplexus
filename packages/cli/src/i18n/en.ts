@@ -40,8 +40,10 @@ export const en = {
         thinking: "Thinking...",
         responding: "{model} via {provider} is typing...",
         runningTools: "Running tools...",
-        skillsHint: "Code skills enabled: read_file, write_file, search_replace, list_dir",
-        cwdHint: "cwd: {cwd}"
+        skillsHint: "Code skills: read_file, write_file, search_replace, list_dir, run_command (approval required)",
+        cwdHint: "cwd: {cwd}",
+        approveCommand: "Run this command?\n{command}\n(cwd: {cwd})",
+        approveSkill: "Allow skill '{skill}' to run?"
     },
 
     provider: {
