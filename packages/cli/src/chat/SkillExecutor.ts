@@ -1,5 +1,5 @@
-import { SKILL_REGISTRY } from "./skills/SkillRegistry";
-import { SkillContext, ToolCall, ToolResult } from "./skills/types";
+import { SKILL_REGISTRY } from "./SkillRegistry";
+import { SkillContext, ToolCall, ToolResult } from "./Types";
 
 const TOOL_CALL_RE = /<tool_call>\s*([\s\S]*?)\s*<\/tool_call>/g;
 

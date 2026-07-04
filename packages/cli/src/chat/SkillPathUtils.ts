@@ -1,5 +1,5 @@
 import * as path from "path";
-import { SkillContext } from "./skills/types";
+import { SkillContext } from "./Types";
 
 /**
  * Resolves a user-supplied path relative to cwd, constrained to the project root.

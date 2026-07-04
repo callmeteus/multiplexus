@@ -1,5 +1,6 @@
-import { getSkills } from "./skills/SkillRegistry";
-import { SkillContext } from "./skills/types";
+import { getSkills } from "./SkillRegistry";
+import { SkillContext } from "./Types";
+import { Skill } from "./Types";
 
 /**
  * Builds planning guidance for multi-step coding tasks.
@@ -41,13 +42,15 @@ function buildPlanningGuidance(lang: string): string[] {
 export function buildChatSystemPrompt(ctx: SkillContext, lang: string): string {
     const isPt = lang === "pt";
     const skills = getSkills();
-    const toolLines = skills.map(s => {
+
+    const toolLines = skills.map((s: Skill) => {
         const approval = s.requiresApproval
             ? (isPt ? " [requer aprovação]" : " [requires approval]")
             : "";
         return `- ${s.name}: ${s.description}${approval}`;
     });
-    const examples = skills.map(s => `<tool_call>${s.example}</tool_call>`);
+
+    const examples = skills.map((s: Skill) => `<tool_call>${s.example}</tool_call>`);
 
     const intro = isPt
         ? [

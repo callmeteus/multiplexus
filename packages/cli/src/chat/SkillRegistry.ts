@@ -2,7 +2,7 @@ import { listDirSkill } from "./skills/ListDirSkill";
 import { readFileSkill } from "./skills/ReadFileSkill";
 import { runCommandSkill } from "./skills/RunCommandSkill";
 import { searchReplaceSkill } from "./skills/SearchReplaceSkill";
-import { Skill } from "./skills/types";
+import { Skill } from "./Types";
 import { writeFileSkill } from "./skills/WriteFileSkill";
 
 /** All registered chat skills, keyed by name. */
