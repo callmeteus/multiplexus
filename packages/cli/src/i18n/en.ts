@@ -172,7 +172,7 @@ export const en = {
         startDesc: "Start the local multiplexus router server in background",
         stopDesc: "Stop the local multiplexus router server on port 3000",
         providerDesc: "Manage providers",
-        providerActionDesc: "Action: add",
+        providerActionDesc: "Action: add | list",
         routeDesc: "Manage model routes",
         routeActionDesc: "Action: add",
         userDesc: "Manage client users",

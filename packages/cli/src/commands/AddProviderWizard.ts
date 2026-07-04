@@ -10,16 +10,23 @@ import { loginXai } from "./add_provider_wizard/XaiLogin";
 /**
  * Formats the preset label.
  * @param preset The preset.
+ * @param isConfigured Whether the provider has keys configured.
  * @returns The formatted preset label.
  */
-function formatPresetLabel(preset: { label: string; freeTier?: string[] }): string {
+function formatPresetLabel(preset: { label: string; freeTier?: string[] }, isConfigured: boolean): string {
+    const symbol = isConfigured ? "🟢 " : "⚪ ";
+
     if (preset.freeTier && preset.freeTier.length > 0) {
-        return `${preset.label} ${t.provider.freeTierBadge}`;
+        return `${symbol}${preset.label} ${t.provider.freeTierBadge}`;
     }
 
-    return preset.label;
+    return `${symbol}${preset.label}`;
 }
 
+/**
+ * Starts the wizard to register a new LLM provider and configure its credentials.
+ * @param apiClient The API client.
+ */
 export async function addProviderWizard(apiClient: ApiClient) {
     await ensureCredentials(apiClient, { requireAdmin: true });
     clack.intro(t.menu.addProvider);
@@ -35,6 +42,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
         clack.log.warn("Backend presets unreachable. Loaded presets from local offline cache.");
     }
 
+    const keys = await apiClient.getProviderKeys().catch(() => [] as any[]);
     const providers = await apiClient.getProviders().catch(() => [] as any[]);
 
     if (presets.some(p => p.freeTier?.length > 0)) {
@@ -43,7 +51,16 @@ export async function addProviderWizard(apiClient: ApiClient) {
 
     const selection = await clack.select({
         message: t.provider.selectPrompt,
-        options: presets.map(p => ({ value: p.value, label: formatPresetLabel(p) }))
+        options: presets.map(p => {
+            const isConfigured = keys.some((key: any) => {
+                const pObj = key.provider || key.Provider;
+                return pObj && pObj.name === p.value;
+            });
+            return {
+                value: p.value,
+                label: formatPresetLabel(p, isConfigured)
+            };
+        })
     });
 
     if (clack.isCancel(selection)) {

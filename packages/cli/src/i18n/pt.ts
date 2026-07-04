@@ -171,7 +171,7 @@ export const pt: Dictionary = {
         startDesc: "Inicia o servidor roteador multiplexus local em segundo plano",
         stopDesc: "Para o servidor roteador multiplexus na porta 3000",
         providerDesc: "Gerenciar providers",
-        providerActionDesc: "Ação: add",
+        providerActionDesc: "Ação: add | list",
         routeDesc: "Gerenciar rotas de modelos",
         routeActionDesc: "Ação: add",
         userDesc: "Gerenciar usuários/clientes",

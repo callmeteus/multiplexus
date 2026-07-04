@@ -10,6 +10,7 @@ import { generateClientKeyWizard, listUsersWizard } from "./commands/AddUserWiza
 import { helpWizard } from "./commands/HelpWizard";
 import { startBackendWizard, stopBackendWizard } from "./commands/StartWizard";
 import { managePluginsWizard } from "./commands/PluginWizard";
+import { listProvidersWizard } from "./commands/ListProvidersWizard";
 
 const apiClient = new ApiClient();
 
@@ -25,6 +26,7 @@ async function runInteractiveMenu() {
             { value: "start", label: t.menu.startServer },
             { value: "stop", label: t.menu.stopServer },
             { value: "provider", label: t.menu.addProvider },
+            { value: "provider-list", label: "List Supported Providers" },
             { value: "route", label: t.menu.addRoute },
             { value: "client", label: t.menu.addUser },
             { value: "list", label: t.menu.listUsers },
@@ -48,6 +50,9 @@ async function runInteractiveMenu() {
     if (action === "provider") {
         await addProviderWizard(apiClient);
     } else
+    if (action === "provider-list") {
+        await listProvidersWizard(apiClient);
+    } else
     if (action === "route") {
         await addRouteWizard(apiClient);
     } else
@@ -65,6 +70,9 @@ async function runInteractiveMenu() {
     }
 }
 
+/**
+ * Main entry point of the CLI application. Parses command line arguments and routes actions.
+ */
 async function main() {
     const argv = await yargs(hideBin(process.argv))
         .scriptName("mpx")
@@ -86,66 +94,83 @@ async function main() {
             }
         )
         .command(
-            "provider <action>",
+            "provider",
             t.yargs.providerDesc,
             (y) => {
-                return y.positional("action", {
-                    describe: t.yargs.providerActionDesc,
-                    type: "string"
-                });
-            },
-            async (argv) => {
-                if (argv.action === "add") {
-                    await addProviderWizard(apiClient);
-                }
+                return y
+                    .command(
+                        "add",
+                        "Register a new provider and its keys",
+                        () => {},
+                        async () => {
+                            await addProviderWizard(apiClient);
+                        }
+                    )
+                    .command(
+                        "list",
+                        "List all supported and active providers",
+                        () => {},
+                        async () => {
+                            await listProvidersWizard(apiClient);
+                        }
+                    )
+                    .demandCommand(1, "Specify an action: add or list");
             }
         )
         .command(
-            "route <action>",
+            "route",
             t.yargs.routeDesc,
             (y) => {
-                return y.positional("action", {
-                    describe: t.yargs.routeActionDesc,
-                    type: "string"
-                });
-            },
-            async (argv) => {
-                if (argv.action === "add") {
-                    await addRouteWizard(apiClient);
-                }
+                return y
+                    .command(
+                        "add",
+                        "Configure a new model routing rule",
+                        () => {},
+                        async () => {
+                            await addRouteWizard(apiClient);
+                        }
+                    )
+                    .demandCommand(1, "Specify an action: add");
             }
         )
         .command(
-            "user <action>",
+            "user",
             t.yargs.userDesc,
             (y) => {
-                return y.positional("action", {
-                    describe: t.yargs.userActionDesc,
-                    type: "string"
-                });
-            },
-            async (argv) => {
-                if (argv.action === "create") {
-                    await generateClientKeyWizard(apiClient);
-                } else
-                if (argv.action === "list") {
-                    await listUsersWizard(apiClient);
-                }
+                return y
+                    .command(
+                        "create",
+                        "Generate a new client API key",
+                        () => {},
+                        async () => {
+                            await generateClientKeyWizard(apiClient);
+                        }
+                    )
+                    .command(
+                        "list",
+                        "List all client users and their active keys",
+                        () => {},
+                        async () => {
+                            await listUsersWizard(apiClient);
+                        }
+                    )
+                    .demandCommand(1, "Specify an action: create or list");
             }
         )
         .command(
-            "plugin <action>",
+            "plugin",
             t.yargs.pluginDesc,
             (y) => {
-                return y.positional("action", {
-                    describe: t.yargs.pluginActionDesc,
-                    type: "string"
-                });
-            },
-            async (argv) => {
-                if (argv.action === "toggle") {
-                    await managePluginsWizard(apiClient);
-                }
+                return y
+                    .command(
+                        "toggle",
+                        "Enable or disable user plugins (e.g. Caveman)",
+                        () => {},
+                        async () => {
+                            await managePluginsWizard(apiClient);
+                        }
+                    )
+                    .demandCommand(1, "Specify an action: toggle");
             }
         )
         .command(
