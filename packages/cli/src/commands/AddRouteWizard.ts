@@ -4,7 +4,7 @@ import { ensureCredentials } from "../config/LocalConfig";
 import { t } from "../i18n/index";
 
 /**
- * Adds a route wizard.
+ * Starts the wizard to register routing targets for an exposed model.
  * @param apiClient The API client.
  */
 export async function addRouteWizard(apiClient: ApiClient) {
@@ -12,8 +12,17 @@ export async function addRouteWizard(apiClient: ApiClient) {
     clack.intro(t.menu.addRoute);
 
     const providers = await apiClient.getProviders().catch(() => [] as any[]);
-    if (providers.length === 0) {
-        clack.log.warn("Please add a provider first before configuring routes.");
+    const keys = await apiClient.getProviderKeys().catch(() => [] as any[]);
+
+    const configuredProviders = providers.filter((p: any) => {
+        return keys.some((key: any) => {
+            const pObj = key.provider || key.Provider;
+            return pObj && pObj.id === p.id;
+        });
+    });
+
+    if (configuredProviders.length === 0) {
+        clack.log.warn(t.route.noConfiguredProviders);
         clack.outro("");
         return;
     }
@@ -23,7 +32,7 @@ export async function addRouteWizard(apiClient: ApiClient) {
         placeholder: "gpt-4o",
         validate(value) {
             if (!value) {
-                return "Router model name is required";
+                return t.route.routerModelRequired;
             }
         }
     });
@@ -32,72 +41,83 @@ export async function addRouteWizard(apiClient: ApiClient) {
         return;
     }
 
-    const providerSelection = await clack.select({
-        message: t.provider.selectPrompt,
-        options: providers.map((p: any) => ({ value: p.id, label: p.name }))
-    });
+    // Loop to support configuring multiple target models for the same exposed route model
+    while (true) {
+        const providerSelection = await clack.select({
+            message: t.provider.selectPrompt,
+            options: configuredProviders.map((p: any) => ({ value: p.id, label: p.name }))
+        });
 
-    if (clack.isCancel(providerSelection)) {
-        return;
-    }
-
-    const providerModel = await clack.text({
-        message: t.route.providerModelPrompt,
-        placeholder: "gpt-4o-mini",
-        validate(value) {
-            if (!value) {
-                return "Provider model name is required";
-            }
+        if (clack.isCancel(providerSelection)) {
+            break;
         }
-    });
 
-    if (clack.isCancel(providerModel)) {
-        return;
-    }
-
-    const priorityInput = await clack.text({
-        message: t.route.priorityPrompt,
-        placeholder: "1",
-        defaultValue: "1",
-        validate(value) {
-            if (value && isNaN(Number(value))) {
-                return "Priority must be a number";
+        const providerModel = await clack.text({
+            message: t.route.providerModelPrompt,
+            placeholder: "gpt-4o-mini",
+            validate(value) {
+                if (!value) {
+                    return t.route.providerModelRequired;
+                }
             }
+        });
+
+        if (clack.isCancel(providerModel)) {
+            break;
         }
-    });
 
-    if (clack.isCancel(priorityInput)) {
-        return;
-    }
-
-    const weightInput = await clack.text({
-        message: t.route.weightPrompt,
-        placeholder: "1",
-        defaultValue: "1",
-        validate(value) {
-            if (value && isNaN(Number(value))) {
-                return "Weight must be a number";
+        const priorityInput = await clack.text({
+            message: t.route.priorityPrompt,
+            placeholder: "1",
+            defaultValue: "1",
+            validate(value) {
+                if (value && isNaN(Number(value))) {
+                    return t.route.priorityMustBeNumber;
+                }
             }
+        });
+
+        if (clack.isCancel(priorityInput)) {
+            break;
         }
-    });
 
-    if (clack.isCancel(weightInput)) {
-        return;
-    }
+        const weightInput = await clack.text({
+            message: t.route.weightPrompt,
+            placeholder: "1",
+            defaultValue: "1",
+            validate(value) {
+                if (value && isNaN(Number(value))) {
+                    return t.route.weightMustBeNumber;
+                }
+            }
+        });
 
-    const spinner = clack.spinner();
-    spinner.start("Configuring model route...");
-    try {
-        await apiClient.createModelRoute(
-            routerModel as string,
-            Number(providerSelection),
-            providerModel as string,
-            priorityInput ? Number(priorityInput) : 1,
-            weightInput ? Number(weightInput) : 1
-        );
-        spinner.stop(t.route.success);
-    } catch (err: any) {
-        spinner.stop("Error configuring route");
-        clack.log.error(`${t.common.error} ${err.message}`);
+        if (clack.isCancel(weightInput)) {
+            break;
+        }
+
+        const spinner = clack.spinner();
+        spinner.start(t.route.configuring);
+        try {
+            await apiClient.createModelRoute(
+                routerModel as string,
+                Number(providerSelection),
+                providerModel as string,
+                priorityInput ? Number(priorityInput) : 1,
+                weightInput ? Number(weightInput) : 1
+            );
+            spinner.stop(t.route.success);
+        } catch (err: any) {
+            spinner.stop(t.route.errorConfiguring);
+            clack.log.error(`${t.common.error} ${err.message}`);
+        }
+
+        const addAnother = await clack.confirm({
+            message: t.route.addAnotherPrompt
+        });
+
+        if (clack.isCancel(addAnother) || !addAnother) {
+            break;
+        }
     }
 }

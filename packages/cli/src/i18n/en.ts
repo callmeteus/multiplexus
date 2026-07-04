@@ -21,13 +21,29 @@ export const en = {
     },
 
     provider: {
-        namePrompt: "Enter provider name:",
+        namePrompt: "Enter provider custom name:",
         typePrompt: "Select API Type preset:",
         baseUrlPrompt: "Enter API Base URL (leave empty for default):",
         selectPrompt: "Select a provider:",
         freeTierBadge: "free",
         freeTierLegend: "free tier available",
-        success: "Provider successfully registered!"
+        success: "Provider successfully registered!",
+        nameRequired: "Provider name is required",
+        baseUrlRequired: "Base URL is required for custom providers",
+        registering: "Registering provider...",
+        registeringDefault: "Registering default provider...",
+        errorRegistering: "Error registering provider",
+        cloudflareAccountIdPrompt: "Enter your Cloudflare Account ID:",
+        cloudflareAccountIdRequired: "Account ID is required",
+        keyAuthMethodPrompt: "How would you like to add the API Key/Token?",
+        keyAuthMethodManual: "Enter key manually",
+        keyAuthMethodOAuth: "Log in via Web Browser (OAuth/Connection)",
+        oauthStarting: "Starting browser OAuth flow...",
+        oauthFailed: "OAuth connection failed",
+        customGuideText: "Follow setup instructions for your custom provider '{name}' to generate a valid API key.",
+        customGuideTitle: "Custom Guide",
+        keyReadyConfirm: "Do you have the API Key ready?",
+        keySetupAborted: "Aborted key setup"
     },
 
     key: {
@@ -37,7 +53,11 @@ export const en = {
         enterPrompt: "Paste your API Key:",
         weightPrompt: "Enter key weight (for load balancing, default: 1):",
         descPrompt: "Enter key description (optional):",
-        success: "API key successfully added to provider!"
+        success: "API key successfully added to provider!",
+        keyRequired: "API Key cannot be empty",
+        weightMustBeNumber: "Weight must be a number",
+        adding: "Adding API Key to database...",
+        errorAdding: "Error adding key"
     },
 
     route: {
@@ -45,7 +65,15 @@ export const en = {
         providerModelPrompt: "Enter the provider's actual model name (e.g. gpt-4o-mini, claude-3-5-sonnet-latest):",
         priorityPrompt: "Enter priority (lower is tried first):",
         weightPrompt: "Enter routing weight (for load balancing, default: 1):",
-        success: "Model route configured successfully!"
+        success: "Model route configured successfully!",
+        addAnotherPrompt: "Do you want to add another target model to this route?",
+        noConfiguredProviders: "Please configure at least one provider with an API key first before configuring routes.",
+        configuring: "Configuring model route...",
+        errorConfiguring: "Error configuring route",
+        routerModelRequired: "Router model name is required",
+        providerModelRequired: "Provider model name is required",
+        priorityMustBeNumber: "Priority must be a number",
+        weightMustBeNumber: "Weight must be a number"
     },
 
     user: {
@@ -55,7 +83,13 @@ export const en = {
         roleUser: "User (can only query chat completions)",
         success: "Client key generated successfully! Copy it now:",
         listTitle: "Active Client API Keys:",
-        listEmpty: "No client API keys configured."
+        listEmpty: "No client API keys configured.",
+        nameRequired: "Client name is required",
+        generating: "Generating client API Key...",
+        errorGenerating: "Error generating client key",
+        loading: "Loading client API keys...",
+        loadedSuccess: "Loaded active users successfully!",
+        errorLoading: "Error loading client keys"
     },
 
     help: {

@@ -23,13 +23,29 @@ export const pt: Dictionary = {
     },
 
     provider: {
-        namePrompt: "Digite o nome do provider:",
+        namePrompt: "Digite o nome customizado do provider:",
         typePrompt: "Selecione o tipo de API:",
         baseUrlPrompt: "Digite a URL Base da API (deixe em branco para o padrão):",
         selectPrompt: "Selecione um provider:",
         freeTierBadge: "grátis",
         freeTierLegend: "tier gratuito disponível",
-        success: "Provider registrado com sucesso!"
+        success: "Provider registrado com sucesso!",
+        nameRequired: "Nome do provider é obrigatório",
+        baseUrlRequired: "URL Base é obrigatória para providers customizados",
+        registering: "Registrando provider...",
+        registeringDefault: "Registrando provider padrão...",
+        errorRegistering: "Erro ao registrar provider",
+        cloudflareAccountIdPrompt: "Digite seu Cloudflare Account ID:",
+        cloudflareAccountIdRequired: "Account ID é obrigatório",
+        keyAuthMethodPrompt: "Como você gostaria de adicionar a chave de API/Token?",
+        keyAuthMethodManual: "Digitar chave manualmente",
+        keyAuthMethodOAuth: "Entrar via navegador web (OAuth/Conexão)",
+        oauthStarting: "Iniciando fluxo OAuth no navegador...",
+        oauthFailed: "Conexão OAuth falhou",
+        customGuideText: "Siga as instruções de configuração para seu provider customizado '{name}' para gerar uma chave API válida.",
+        customGuideTitle: "Guia Customizado",
+        keyReadyConfirm: "Você tem a chave API em mãos?",
+        keySetupAborted: "Configuração de chave abortada"
     },
 
     key: {
@@ -39,7 +55,11 @@ export const pt: Dictionary = {
         enterPrompt: "Cole sua chave API:",
         weightPrompt: "Digite o peso da chave (para balanceamento, padrão: 1):",
         descPrompt: "Digite uma descrição para a chave (opcional):",
-        success: "Chave API adicionada ao provider com sucesso!"
+        success: "Chave API adicionada ao provider com sucesso!",
+        keyRequired: "Chave API não pode ser vazia",
+        weightMustBeNumber: "O peso deve ser um número",
+        adding: "Adicionando chave API ao banco de dados...",
+        errorAdding: "Erro ao adicionar chave"
     },
 
     route: {
@@ -47,7 +67,15 @@ export const pt: Dictionary = {
         providerModelPrompt: "Digite o nome real do modelo no provider:",
         priorityPrompt: "Digite a prioridade (menor é tentado primeiro, ex: 1 para primário, 2 para failover):",
         weightPrompt: "Digite o peso da rota (para balanceamento, padrão: 1):",
-        success: "Rota de modelo configurada com sucesso!"
+        success: "Rota de modelo configurada com sucesso!",
+        addAnotherPrompt: "Deseja adicionar outro modelo de destino a esta rota?",
+        noConfiguredProviders: "Por favor, configure pelo menos um provider com uma chave API antes de configurar rotas.",
+        configuring: "Configurando rota de modelo...",
+        errorConfiguring: "Erro ao configurar rota",
+        routerModelRequired: "O nome do modelo exposto é obrigatório",
+        providerModelRequired: "O nome real do modelo no provider é obrigatório",
+        priorityMustBeNumber: "A prioridade deve ser um número",
+        weightMustBeNumber: "O peso deve ser um número"
     },
 
     user: {
@@ -57,7 +85,13 @@ export const pt: Dictionary = {
         roleUser: "Usuário (só pode fazer chat completions)",
         success: "Chave do cliente gerada com sucesso! Copie-a agora:",
         listTitle: "Chaves de API de Clientes Ativas:",
-        listEmpty: "Nenhuma chave de API de cliente configurada."
+        listEmpty: "Nenhuma chave de API de cliente configurada.",
+        nameRequired: "Nome do cliente é obrigatório",
+        generating: "Gerando chave de API do cliente...",
+        errorGenerating: "Erro ao gerar chave de cliente",
+        loading: "Carregando chaves de API dos clientes...",
+        loadedSuccess: "Usuários ativos carregados com sucesso!",
+        errorLoading: "Erro ao carregar chaves de clientes"
     },
 
     help: {

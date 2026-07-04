@@ -17,7 +17,7 @@ export async function generateClientKeyWizard(apiClient: ApiClient) {
         placeholder: "frontend-app",
         validate(value) {
             if (!value) {
-                return "Client name is required";
+                return t.user.nameRequired;
             }
         }
     });
@@ -39,13 +39,13 @@ export async function generateClientKeyWizard(apiClient: ApiClient) {
     }
 
     const spinner = clack.spinner();
-    spinner.start("Generating client API Key...");
+    spinner.start(t.user.generating);
     try {
         const newUser = await apiClient.createUser(name as string, roleSelection as string);
         spinner.stop(t.user.success);
         clack.note(newUser.apiKey, "Client API Key");
     } catch (err: any) {
-        spinner.stop("Error generating client key");
+        spinner.stop(t.user.errorGenerating);
         clack.log.error(`${t.common.error} ${err.message}`);
     }
 }
@@ -59,16 +59,18 @@ export async function listUsersWizard(apiClient: ApiClient) {
     clack.intro(t.menu.listUsers);
 
     const spinner = clack.spinner();
-    spinner.start("Loading client API keys...");
+    spinner.start(t.user.loading);
+
     try {
         const users = await apiClient.getUsers();
-        spinner.stop("Loaded active users successfully!");
+        spinner.stop(t.user.loadedSuccess);
+
         const listContent = users
             .map((u: any) => `- Name: ${u.name}\n  Key:  ${u.apiKey}\n  Role: ${u.role}`)
             .join("\n\n");
         clack.note(listContent || t.user.listEmpty, t.user.listTitle);
     } catch (err: any) {
-        spinner.stop("Error loading client keys");
+        spinner.stop(t.user.errorLoading);
         clack.log.error(`${t.common.error} ${err.message}`);
     }
 

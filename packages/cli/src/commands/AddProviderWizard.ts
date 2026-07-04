@@ -88,7 +88,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
             placeholder: "groq",
             validate(value) {
                 if (!value) {
-                    return "Provider name is required";
+                    return t.provider.nameRequired;
                 }
             }
         });
@@ -102,7 +102,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
             placeholder: "https://api.groq.com/openai/v1",
             validate(value) {
                 if (!value) {
-                    return "Base URL is required for custom providers";
+                    return t.provider.baseUrlRequired;
                 }
             }
         });
@@ -112,7 +112,8 @@ export async function addProviderWizard(apiClient: ApiClient) {
         }
 
         const spinnerReg = clack.spinner();
-        spinnerReg.start("Registering provider...");
+        spinnerReg.start(t.provider.registering);
+
         try {
             const res = await apiClient.createProvider(name as string, ApiType.OPENAI, inputUrl as string);
             providerId = res.id;
@@ -120,36 +121,44 @@ export async function addProviderWizard(apiClient: ApiClient) {
             apiType = ApiType.OPENAI;
             spinnerReg.stop(t.provider.success);
         } catch (err: any) {
-            spinnerReg.stop("Error registering provider");
+            spinnerReg.stop(t.provider.errorRegistering);
             clack.log.error(`${t.common.error} ${err.message}`);
             return;
         }
     } else {
         const existing = providers.find((p: any) => p.name === presetName);
+
         if (existing) {
             providerId = existing.id;
         } else {
             // Handle cloudflare dynamic account ID URL generation
             if (presetName === "cloudflare") {
                 const accountId = await clack.text({
-                    message: "Enter your Cloudflare Account ID:",
+                    message: t.provider.cloudflareAccountIdPrompt,
                     placeholder: "e.g. 1a2b3c4d5e6f...",
                     validate(val) {
-                        if (!val) return "Account ID is required";
+                        if (!val) {
+                            return t.provider.cloudflareAccountIdRequired;
+                        }
                     }
                 });
-                if (clack.isCancel(accountId)) return;
+
+                if (clack.isCancel(accountId)) {
+                    return;
+                }
+
                 baseUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1`;
             }
 
             const spinnerReg = clack.spinner();
-            spinnerReg.start("Registering default provider...");
+            spinnerReg.start(t.provider.registeringDefault);
+
             try {
                 const res = await apiClient.createProvider(presetName, apiType, baseUrl || undefined);
                 providerId = res.id;
                 spinnerReg.stop(t.provider.success);
             } catch (err: any) {
-                spinnerReg.stop("Error registering provider");
+                spinnerReg.stop(t.provider.errorRegistering);
                 clack.log.error(`${t.common.error} ${err.message}`);
                 return;
             }
@@ -160,10 +169,10 @@ export async function addProviderWizard(apiClient: ApiClient) {
 
     if (selectedPreset.browserLogin) {
         const authSelection = await clack.select({
-            message: "How would you like to add the API Key/Token?",
+            message: t.provider.keyAuthMethodPrompt,
             options: [
-                { value: "manual", label: "Enter key manually" },
-                { value: "oauth", label: "Log in via Web Browser (OAuth/Connection)" }
+                { value: "manual", label: t.provider.keyAuthMethodManual },
+                { value: "oauth", label: t.provider.keyAuthMethodOAuth }
             ]
         });
 
@@ -177,19 +186,23 @@ export async function addProviderWizard(apiClient: ApiClient) {
     let key = "";
 
     if (authMethod === "oauth") {
-        clack.log.info("Starting browser OAuth flow...");
+        clack.log.info(t.provider.oauthStarting);
+
         try {
-            if (presetName === "gemini") {
-                key = await loginGoogle();
-            } else
-            if (presetName === "anthropic") {
-                key = await loginAnthropic();
-            } else
-            if (presetName === "xai") {
-                key = await loginXai();
+            switch (presetName) {
+                case "gemini":
+                    key = await loginGoogle();
+                    break;
+                case "anthropic":
+                    key = await loginAnthropic();
+                    break;
+                case "xai":
+                    key = await loginXai();
+                    break;
             }
+    
         } catch (err: any) {
-            clack.log.error(`OAuth connection failed: ${err.message}`);
+            clack.log.error(`${t.provider.oauthFailed}: ${err.message}`);
             return;
         }
     } else {
@@ -208,18 +221,20 @@ export async function addProviderWizard(apiClient: ApiClient) {
 
         if (mode === "guided") {
             const guide = selectedPreset.guide;
+
             if (guide) {
                 clack.note(`${guide.step1}\n${guide.step2}\n${guide.step3}`, `${providerName} Guide`);
             } else {
-                clack.note(`Follow setup instructions for your custom provider '${providerName}' to generate a valid API key.`, "Custom Guide");
+                const customGuideMsg = t.provider.customGuideText.replace("{name}", providerName);
+                clack.note(customGuideMsg, t.provider.customGuideTitle);
             }
 
             const proceed = await clack.confirm({
-                message: "Do you have the API Key ready?"
+                message: t.provider.keyReadyConfirm
             });
 
             if (!proceed || clack.isCancel(proceed)) {
-                clack.outro("Aborted key setup");
+                clack.outro(t.provider.keySetupAborted);
                 return;
             }
         }
@@ -228,7 +243,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
             message: t.key.enterPrompt,
             validate(value) {
                 if (!value) {
-                    return "API Key cannot be empty";
+                    return t.key.keyRequired;
                 }
             }
         });
@@ -245,7 +260,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
         defaultValue: "1",
         validate(value) {
             if (value && isNaN(Number(value))) {
-                return "Weight must be a number";
+                return t.key.weightMustBeNumber;
             }
         }
     });
@@ -264,7 +279,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
     }
 
     const spinnerKey = clack.spinner();
-    spinnerKey.start("Adding API Key to database...");
+    spinnerKey.start(t.key.adding);
     try {
         await apiClient.addProviderKey(
             providerId,
@@ -272,9 +287,10 @@ export async function addProviderWizard(apiClient: ApiClient) {
             weightInput ? Number(weightInput) : 1,
             (desc as string) || undefined
         );
+
         spinnerKey.stop(t.key.success);
     } catch (err: any) {
-        spinnerKey.stop("Error adding key");
+        spinnerKey.stop(t.key.errorAdding);
         clack.log.error(`${t.common.error} ${err.message}`);
     }
 }
