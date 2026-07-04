@@ -1,7 +1,11 @@
-import { spawn } from "child_process";
 import { createServer } from "http";
 import { renderHtmlTemplate } from "../../utils/ResponseRenderer";
+import { openUrlInBrowser } from "../../utils/ProcessUtils";
 
+/**
+ * Logs in to Anthropic.
+ * @returns The OAuth token.
+ */
 export async function loginAnthropic(): Promise<string> {
     return new Promise((resolve, reject) => {
         const port = 5678;
@@ -33,12 +37,7 @@ export async function loginAnthropic(): Promise<string> {
 
         server.listen(port, () => {
             const targetUrl = `https://decolua.github.io/9router/connect?provider=anthropic&port=${port}`;
-            
-            const isWindows = process.platform === "win32";
-            const isMac = process.platform === "darwin";
-            const opener = isWindows ? "explorer" : (isMac ? "open" : "xdg-open");
-            
-            spawn(opener, [targetUrl], { detached: true, stdio: "ignore" }).unref();
+            openUrlInBrowser(targetUrl);
         });
     });
 }
