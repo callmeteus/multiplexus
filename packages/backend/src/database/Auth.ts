@@ -27,7 +27,7 @@ export async function authenticate(
         return null;
     }
 
-    if (requiredRole && user.role !== requiredRole) {
+    if (requiredRole && user.role.toUpperCase() !== requiredRole.toUpperCase()) {
         reply.code(403).send({ error: "Forbidden: insufficient permissions" });
         return null;
     }

@@ -14,39 +14,80 @@ import { logger } from "./Logger";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const backendRoot = path.resolve(__dirname, "..");
+const credentialsPath = path.join(backendRoot, "initial-credentials.data");
+
+/**
+ * Writes the admin credentials file from the current database state.
+ * @param adminUser The admin user record.
+ */
+function writeCredentialsFile(adminUser: User) {
+    const credentialsContent = [
+        "==================================================",
+        "      MULTIPLEXUS INITIAL ADMIN CREDENTIALS       ",
+        "==================================================",
+        `Admin Name:      ${adminUser.name}`,
+        `Admin API Key:   ${adminUser.apiKey}`,
+        `Router URL:      http://localhost:3000`,
+        `Created At:      ${new Date().toISOString()}`,
+        "==================================================",
+        "Keep this key secret. You can use it in your CLI  ",
+        "to register providers, keys, and model routes.    ",
+        "=================================================="
+    ].join("\n");
+
+    fs.writeFileSync(credentialsPath, credentialsContent, "utf-8");
+}
+
+/**
+ * Normalizes legacy lowercase role values in the database.
+ */
+async function normalizeUserRoles() {
+    await User.update(
+        { role: UserRole.ADMIN },
+        { where: { role: "admin" } }
+    );
+    await User.update(
+        { role: UserRole.USER },
+        { where: { role: "user" } }
+    );
+}
+
+/**
+ * Keeps initial-credentials.data aligned with the admin user in the database.
+ */
+async function syncCredentialsFile() {
+    const adminUser = await User.findOne({
+        where: { role: UserRole.ADMIN },
+        order: [["id", "ASC"]]
+    });
+
+    if (!adminUser) {
+        return;
+    }
+
+    writeCredentialsFile(adminUser);
+}
 
 async function seedDatabase() {
+    await normalizeUserRoles();
+
     // 1. Seed Default Admin User if no users exist
     const userCount = await User.count();
     if (userCount === 0) {
         const adminKey = `sk-mux-${crypto.randomBytes(24).toString("hex")}`;
-        await User.create({
+        const adminUser = await User.create({
             name: "Default Admin",
             apiKey: adminKey,
             role: UserRole.ADMIN
         });
 
-        const credentialsContent = [
-            "==================================================",
-            "      MULTIPLEXUS INITIAL ADMIN CREDENTIALS       ",
-            "==================================================",
-            `Admin Name:      Default Admin`,
-            `Admin API Key:   ${adminKey}`,
-            `Router URL:      http://localhost:3000`,
-            `Created At:      ${new Date().toISOString()}`,
-            "==================================================",
-            "Keep this key secret. You can use it in your CLI  ",
-            "to register providers, keys, and model routes.    ",
-            "=================================================="
-        ].join("\n");
+        writeCredentialsFile(adminUser);
 
-        // Write to project root initial-credentials.data
-        // Since we run from multiplexus directory, project root is the process CWD
-        const credentialsPath = path.join(process.cwd(), "initial-credentials.data");
-        fs.writeFileSync(credentialsPath, credentialsContent, "utf-8");
-
-        console.log("\n" + credentialsContent + "\n");
+        console.log("\n" + fs.readFileSync(credentialsPath, "utf-8") + "\n");
         logger.info("Initial admin credentials generated and saved.");
+    } else {
+        await syncCredentialsFile();
     }
 
     // 2. Seed Default Providers if no providers exist

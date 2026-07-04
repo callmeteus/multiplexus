@@ -111,6 +111,7 @@ export const en = {
         alreadyRunning: "Router server is already running on port 3000.",
         failed: "Backend failed to respond on port 3000.",
         checkLogs: "Check spawn log: {spawnLog}\nOr runtime log: {combinedLog}",
+        credentialsStale: "Server is running, but admin credentials are missing or outdated. Run 'mpx stop' then 'mpx start', or check packages/backend/initial-credentials.data.",
         credentialsLoaded: "Admin credentials loaded and saved to CLI config.",
         credentialsMissing: "Server started but credentials file not found yet. Wait a moment and run 'mpx start' again.",
         instructionsTitle: "How to use with AI tools",

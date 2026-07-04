@@ -111,6 +111,7 @@ export const pt: Dictionary = {
         alreadyRunning: "O servidor já está rodando na porta 3000.",
         failed: "O backend não respondeu na porta 3000.",
         checkLogs: "Veja o log de spawn: {spawnLog}\nOu o log de runtime: {combinedLog}",
+        credentialsStale: "Servidor está rodando, mas as credenciais de admin estão ausentes ou desatualizadas. Rode 'mpx stop' e depois 'mpx start', ou veja packages/backend/initial-credentials.data.",
         credentialsLoaded: "Credenciais de administrador carregadas e salvas na configuração da CLI.",
         credentialsMissing: "Servidor iniciado, mas o arquivo de credenciais iniciais ainda não foi gerado. Aguarde um momento e execute 'mpx start' novamente.",
         instructionsTitle: "Como usar com ferramentas de IA",

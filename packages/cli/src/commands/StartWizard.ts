@@ -4,8 +4,8 @@ import * as fs from "fs";
 import * as path from "path";
 import { ApiClient } from "../ApiClient";
 import { t } from "../i18n/index";
-import { saveLocalConfig } from "../config/LocalConfig";
-import { readAdminCredentialsFile, resolveBackend } from "../config/BackendResolution";
+import { syncAdminCredentials } from "../config/LocalConfig";
+import { resolveBackend } from "../config/BackendResolution";
 import {
     clearServerPid,
     findListeningPid,
@@ -17,6 +17,8 @@ import {
 
 /**
  * Resolves the tsx CLI path.
+ * @param projectRoot The multiplexus project root.
+ * @returns The tsx CLI path, or null when not installed.
  */
 function resolveTsxCli(projectRoot: string): string | null {
     const candidates = [
@@ -33,25 +35,52 @@ function resolveTsxCli(projectRoot: string): string | null {
     return null;
 }
 
+/**
+ * Returns the backend logs directory.
+ * @param backendDir The backend directory.
+ * @returns The logs directory path.
+ */
 function getBackendLogsDir(backendDir: string): string {
     return path.join(backendDir, "logs");
 }
 
+/**
+ * Returns the spawn log file path, creating the logs directory when needed.
+ * @param backendDir The backend directory.
+ * @returns The spawn log file path.
+ */
 function getSpawnLogFile(backendDir: string): string {
     const logsDir = getBackendLogsDir(backendDir);
     fs.mkdirSync(logsDir, { recursive: true });
     return path.join(logsDir, "spawn.log");
 }
 
+/**
+ * Returns the hint path for today's combined backend log file.
+ * @param backendDir The backend directory.
+ * @returns The combined log file path for today.
+ */
 function getBackendLogHint(backendDir: string): string {
     const today = new Date().toISOString().slice(0, 10);
     return path.join(getBackendLogsDir(backendDir), `combined-${today}.log`);
 }
 
+/**
+ * Quotes a value for safe use inside a PowerShell single-quoted string.
+ * @param value The value to quote.
+ * @returns The quoted value.
+ */
 function quotePowerShell(value: string): string {
     return `'${value.replace(/'/g, "''")}'`;
 }
 
+/**
+ * Creates a Windows launcher script that starts the backend without a visible console.
+ * @param backendDir The backend directory.
+ * @param tsxCli The tsx CLI path.
+ * @param logFile The spawn log file path.
+ * @returns The launcher script path.
+ */
 function createWindowsLauncher(backendDir: string, tsxCli: string, logFile: string): string {
     const launcherPath = path.join(getBackendLogsDir(backendDir), "start-backend.cmd");
     const launcherContent = [
@@ -64,6 +93,13 @@ function createWindowsLauncher(backendDir: string, tsxCli: string, logFile: stri
     return launcherPath;
 }
 
+/**
+ * Spawns the backend process in the background.
+ * @param backendDir The backend directory.
+ * @param tsxCli The tsx CLI path.
+ * @param logFile The spawn log file path.
+ * @returns The spawned child process.
+ */
 function spawnBackendProcess(backendDir: string, tsxCli: string, logFile: string) {
     if (process.platform === "win32") {
         const launcherPath = createWindowsLauncher(backendDir, tsxCli, logFile);
@@ -100,6 +136,11 @@ function spawnBackendProcess(backendDir: string, tsxCli: string, logFile: string
     });
 }
 
+/**
+ * Checks whether the multiplexus backend health endpoint is responding.
+ * @param url The backend base URL.
+ * @returns True when the server reports status ok.
+ */
 async function checkServerReady(url: string): Promise<boolean> {
     try {
         const controller = new AbortController();
@@ -139,15 +180,6 @@ async function waitServerReady(url: string, maxAttempts: number = 30): Promise<b
 }
 
 /**
- * Reads the credentials file from the backend directory.
- * @param backendDir The backend directory.
- * @returns The credentials.
- */
-function readCredentialsFile(backendDir: string): { apiKey: string; url: string } | null {
-    return readAdminCredentialsFile(backendDir);
-}
-
-/**
  * Starts the backend wizard.
  * @param apiClient The API client.
  */
@@ -164,18 +196,12 @@ export async function startBackendWizard(apiClient: ApiClient) {
     const url = "http://localhost:3000";
 
     if (await checkServerReady(url)) {
-        const creds = readCredentialsFile(resolution.backendDir);
-        if (creds) {
-            saveLocalConfig({
-                url: creds.url,
-                apiKey: creds.apiKey
-            });
-            apiClient.setCredentials(creds.url, creds.apiKey);
-        }
-
-        clack.log.success(t.start.alreadyRunning);
-        if (creds) {
+        if (await syncAdminCredentials(apiClient, resolution.backendDir)) {
+            clack.log.success(t.start.alreadyRunning);
             clack.log.success(t.start.credentialsLoaded);
+        } else {
+            clack.log.success(t.start.alreadyRunning);
+            clack.log.warn(t.start.credentialsStale);
         }
         clack.outro("");
         return;
@@ -227,20 +253,12 @@ export async function startBackendWizard(apiClient: ApiClient) {
 
     spinner.message("Loading router administrative credentials...");
 
-    // Read generated credentials file from backend run
-    const creds = readCredentialsFile(resolution.backendDir);
-    if (creds) {
-        saveLocalConfig({
-            url: creds.url,
-            apiKey: creds.apiKey
-        });
-
-        apiClient.setCredentials(creds.url, creds.apiKey);
+    if (await syncAdminCredentials(apiClient, resolution.backendDir)) {
         spinner.stop(t.start.ready);
         clack.log.success(t.start.credentialsLoaded);
     } else {
         spinner.stop(t.start.ready);
-        clack.log.warn("Router server is online, but could not fetch initial-credentials.data. Please configure manually.");
+        clack.log.warn(t.start.credentialsStale);
     }
 
     clack.outro("");
@@ -307,7 +325,7 @@ export async function stopBackendWizard() {
         return;
     }
 
-    const pid = resolveRunningServerPid(resolution.backendDir, serverUp);
+    const pid = resolveRunningServerPid(resolution.backendDir, serverUp) ?? findListeningPid(3000);
 
     if (!pid) {
         clack.log.warn(t.stop.notRunning);
@@ -318,7 +336,14 @@ export async function stopBackendWizard() {
     const spinner = clack.spinner();
     spinner.start(t.stop.stopping);
 
-    const killed = killServerProcess(pid);
+    let killed = killServerProcess(pid);
+
+    if (!killed) {
+        const portPid = findListeningPid(3000);
+        if (portPid && portPid !== pid) {
+            killed = killServerProcess(portPid);
+        }
+    }
     clearServerPid(resolution.backendDir);
 
     if (!killed) {

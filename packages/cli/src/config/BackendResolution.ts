@@ -1,6 +1,9 @@
 import * as fs from "fs";
 import * as path from "path";
 
+/**
+ * The backend resolution.
+ */
 export interface BackendResolution {
     projectRoot: string;
     backendDir: string;

@@ -5,6 +5,9 @@ import { ApiClient } from "../ApiClient";
 import { readAdminCredentialsFile, resolveBackend } from "./BackendResolution";
 import { t } from "../i18n/index";
 
+/**
+ * The persisted local CLI configuration.
+ */
 export interface LocalConfig {
     url: string;
     apiKey: string;
@@ -55,32 +58,6 @@ function loadCredentialsFromProject(): LocalConfig | null {
  */
 function applyConfig(apiClient: ApiClient, config: LocalConfig) {
     apiClient.setCredentials(config.url, config.apiKey);
-}
-
-/**
- * Loads the stored credentials.
- * @param apiClient The API client.
- */
-function loadStoredCredentials(apiClient: ApiClient): void {
-    if (process.env.MULTIPLEXUS_ADMIN_KEY) {
-        applyConfig(apiClient, {
-            url: process.env.MULTIPLEXUS_URL || "http://localhost:3000",
-            apiKey: process.env.MULTIPLEXUS_ADMIN_KEY
-        });
-        return;
-    }
-
-    const localConfig = loadLocalConfig();
-    if (localConfig) {
-        applyConfig(apiClient, localConfig);
-        return;
-    }
-
-    const projectCreds = loadCredentialsFromProject();
-    if (projectCreds) {
-        applyConfig(apiClient, projectCreds);
-        saveLocalConfig(projectCreds);
-    }
 }
 
 /**
@@ -138,46 +115,88 @@ async function promptCredentials(apiClient: ApiClient, adminOnly: boolean) {
 }
 
 /**
- * Refreshes the admin credentials.
+ * Applies project admin credentials when they work against the local server.
  * @param apiClient The API client.
- * @returns True if the admin credentials were refreshed, false otherwise.
+ * @param backendDir The backend directory.
+ * @returns True when valid admin credentials were saved locally.
  */
-async function refreshAdminCredentials(apiClient: ApiClient): Promise<boolean> {
-    const projectCreds = loadCredentialsFromProject();
-    if (!projectCreds) {
+export async function syncAdminCredentials(
+    apiClient: ApiClient,
+    backendDir?: string
+): Promise<boolean> {
+    const creds = backendDir
+        ? readAdminCredentialsFile(backendDir)
+        : loadCredentialsFromProject();
+
+    if (!creds) {
         return false;
     }
 
-    applyConfig(apiClient, projectCreds);
-    saveLocalConfig(projectCreds);
+    applyConfig(apiClient, creds);
 
-    return apiClient.canAccessAdminApi();
+    if (!(await apiClient.canAccessAdminApi())) {
+        return false;
+    }
+
+    saveLocalConfig(creds);
+    return true;
+}
+
+/**
+ * Applies credentials from the local multiplexus project.
+ * @param apiClient The API client.
+ */
+function applyProjectCredentials(apiClient: ApiClient) {
+    const projectCreds = loadCredentialsFromProject();
+    if (projectCreds) {
+        applyConfig(apiClient, projectCreds);
+    }
 }
 
 /**
  * Ensures the credentials.
  * @param apiClient The API client.
- * @param options The options.
+ * @param options Optional flags; set requireAdmin to force admin API access.
  */
 export async function ensureCredentials(
     apiClient: ApiClient,
     options?: { requireAdmin?: boolean }
 ) {
-    loadStoredCredentials(apiClient);
+    const requireAdmin = !!options?.requireAdmin;
 
-    if (!apiClient.hasCredentials()) {
-        await promptCredentials(apiClient, !!options?.requireAdmin);
+    if (process.env.MULTIPLEXUS_ADMIN_KEY) {
+        applyConfig(apiClient, {
+            url: process.env.MULTIPLEXUS_URL || "http://localhost:3000",
+            apiKey: process.env.MULTIPLEXUS_ADMIN_KEY
+        });
+    } else if (requireAdmin && resolveBackend()) {
+        applyProjectCredentials(apiClient);
+    } else {
+        const localConfig = loadLocalConfig();
+        if (localConfig) {
+            applyConfig(apiClient, localConfig);
+        } else {
+            applyProjectCredentials(apiClient);
+        }
     }
 
-    if (!options?.requireAdmin) {
+    if (!apiClient.hasCredentials()) {
+        await promptCredentials(apiClient, requireAdmin);
+    }
+
+    if (!requireAdmin) {
         return;
     }
 
     if (await apiClient.canAccessAdminApi()) {
+        saveLocalConfig({
+            url: apiClient.getBaseUrl(),
+            apiKey: apiClient.getAdminKey()
+        });
         return;
     }
 
-    if (await refreshAdminCredentials(apiClient)) {
+    if (await syncAdminCredentials(apiClient)) {
         clack.log.success(t.setup.adminKeyRefreshed);
         return;
     }

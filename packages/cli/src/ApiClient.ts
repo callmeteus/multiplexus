@@ -40,6 +40,9 @@ function tryReadCredentialsFile(): { apiKey: string; url: string } | null {
     return null;
 }
 
+/**
+ * HTTP client for the multiplexus admin API.
+ */
 export class ApiClient {
     private baseUrl: string = "http://localhost:3000";
     private adminKey: string = "";
@@ -80,6 +83,14 @@ export class ApiClient {
      */
     getBaseUrl(): string {
         return this.baseUrl;
+    }
+
+    /**
+     * Gets the admin key.
+     * @returns The admin key.
+     */
+    getAdminKey(): string {
+        return this.adminKey;
     }
 
     /**

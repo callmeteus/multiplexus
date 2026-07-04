@@ -7,11 +7,10 @@ import { ProviderKey } from "./models/ProviderKey";
 import { ModelRoute } from "./models/ModelRoute";
 import { UserPlugin } from "./models/UserPlugin";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Store database file at the backend package root directory dynamically
-const dbPath = path.resolve(__dirname, "../../../multiplexus.db");
+/**
+ * Database lives inside cwd (current working directory)
+ */
+const dbPath = path.resolve(process.cwd(), "multiplexus.db");
 
 /**
  * The Sequelize instance for the database connection.
