@@ -65,6 +65,10 @@ export class ApiClient {
         return !!this.adminKey;
     }
 
+    getBaseUrl(): string {
+        return this.baseUrl;
+    }
+
     private async request(endpoint: string, method: string = "GET", body?: any): Promise<any> {
         const headers: Record<string, string> = {
             "Content-Type": "application/json"

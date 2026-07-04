@@ -3,7 +3,7 @@ import { authenticate } from "../../../../../database/Auth";
 import { User } from "../../../../../database/models/User";
 import { UserPlugin } from "../../../../../database/models/UserPlugin";
 import { UserRole } from "@multiplexus/shared";
-import { SUPPORTED_PLUGINS } from "../../../../../plugins";
+import { SUPPORTED_PLUGINS, PLUGINS } from "../../../../../plugins";
 
 export const GET = async (request: FastifyRequest, reply: FastifyReply) => {
     const adminUser = await authenticate(request, reply, UserRole.ADMIN);
@@ -18,6 +18,9 @@ export const GET = async (request: FastifyRequest, reply: FastifyReply) => {
         return;
     }
 
+    const acceptLanguage = request.headers["accept-language"] || "";
+    const lang = acceptLanguage.toLowerCase().includes("pt") ? "pt" : "en";
+
     const activePlugins = await UserPlugin.findAll({
         where: {
             userId: targetUser.id
@@ -26,9 +29,13 @@ export const GET = async (request: FastifyRequest, reply: FastifyReply) => {
 
     const result = SUPPORTED_PLUGINS.map((name: string) => {
         const found = activePlugins.find(p => p.pluginName === name);
+        const pluginInstance = PLUGINS[name];
+        const pluginInfo = pluginInstance.i18n[lang] || pluginInstance.i18n.en;
         return {
             name,
-            isEnabled: found ? found.isEnabled : false
+            isEnabled: found ? found.isEnabled : false,
+            displayName: pluginInfo.name,
+            description: pluginInfo.description
         };
     });
 

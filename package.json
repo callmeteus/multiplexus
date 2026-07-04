@@ -12,6 +12,8 @@
         "dev:backend": "npm run dev -w packages/backend",
         "start:backend": "npm run start -w packages/backend",
         "build:backend": "npm run build -w packages/backend",
-        "start:cli": "npm run start -w packages/cli"
+        "start:cli": "npm run start -w packages/cli",
+        "build": "npm run build -w packages/backend && npm run build -w packages/cli",
+        "install:global": "npm run build && npm link --prefix packages/cli"
     }
 }

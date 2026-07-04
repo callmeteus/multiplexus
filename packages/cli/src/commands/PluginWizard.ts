@@ -34,7 +34,7 @@ export async function managePluginsWizard(apiClient: ApiClient) {
         const plugins = await apiClient.getUserPlugins(userId).catch(() => [] as any[]);
         const pluginOptions = plugins.map((p: any) => ({
             value: p.name,
-            label: `${p.name} [${p.isEnabled ? "ENABLED" : "DISABLED"}]`
+            label: `${p.displayName || p.name} [${p.isEnabled ? "ENABLED" : "DISABLED"}] - ${p.description || ""}`
         }));
 
         pluginOptions.push({

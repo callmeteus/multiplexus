@@ -1,13 +1,11 @@
 import * as clack from "@clack/prompts";
-import { ApiType } from "@multiplexus/shared";
 import { ApiClient } from "../ApiClient";
 import { ensureCredentials } from "../config/LocalConfig";
 import { t } from "../i18n/index";
+import { loginGoogle } from "./add_provider_wizard/GoogleLogin";
+import { loginAnthropic } from "./add_provider_wizard/AnthropicLogin";
+import { loginXai } from "./add_provider_wizard/XaiLogin";
 
-/**
- * Adds a provider wizard.
- * @param apiClient The API client.
- */
 export async function addProviderWizard(apiClient: ApiClient) {
     await ensureCredentials(apiClient);
     clack.intro(t.menu.addProvider);
@@ -66,9 +64,8 @@ export async function addProviderWizard(apiClient: ApiClient) {
 
         const spinner = clack.spinner();
         spinner.start("Registering provider...");
-
         try {
-            const res = await apiClient.createProvider(name as string, ApiType.OPENAI, baseUrl as string);
+            const res = await apiClient.createProvider(name as string, "openai", baseUrl as string);
             providerId = res.id;
             providerName = res.name;
             spinner.stop(t.provider.success);
@@ -84,12 +81,11 @@ export async function addProviderWizard(apiClient: ApiClient) {
         } else {
             const spinner = clack.spinner();
             spinner.start("Registering default provider...");
-
             try {
-                let apiType = ApiType.OPENAI;
+                let apiType = "openai";
                 let baseUrl = "";
                 if (selection === "anthropic") {
-                    apiType = ApiType.ANTHROPIC;
+                    apiType = "anthropic";
                 } else
                 if (selection === "gemini") {
                     baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai/v1";
@@ -100,7 +96,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
                 if (selection === "z_ai") {
                     baseUrl = "https://api.z.ai/v1";
                 }
- 
+
                 const res = await apiClient.createProvider(selection as string, apiType, baseUrl || undefined);
                 providerId = res.id;
                 spinner.stop(t.provider.success);
@@ -112,50 +108,86 @@ export async function addProviderWizard(apiClient: ApiClient) {
         }
     }
 
-    // Direct or Step-by-Step key entry
-    const mode = await clack.select({
-        message: t.key.directOrGuidedPrompt,
+    // Ask key entry method
+    const authMethod = await clack.select({
+        message: "How would you like to add the API Key/Token?",
         options: [
-            { value: "direct", label: t.key.directInput },
-            { value: "guided", label: t.key.stepByStep }
+            { value: "manual", label: "Enter key manually" },
+            { value: "oauth", label: "Log in via Web Browser (OAuth/Connection)" }
         ]
     });
 
-    if (clack.isCancel(mode)) {
+    if (clack.isCancel(authMethod)) {
         return;
     }
 
-    if (mode === "guided") {
-        const guides: Record<string, { step1: string; step2: string; step3: string } | undefined> = t.provider.guides;
-        const guide = guides[providerName];
+    let key = "";
 
-        if (guide) {
-            clack.note(`${guide.step1}\n${guide.step2}\n${guide.step3}`, `${providerName} Guide`);
-        } else {
-            clack.note(`Follow setup instructions for your custom provider '${providerName}' to generate a valid API key.`, "Custom Guide");
-        }
-
-        const proceed = await clack.confirm({
-            message: "Do you have the API Key ready?"
-        });
-
-        if (!proceed || clack.isCancel(proceed)) {
-            clack.outro("Aborted key setup");
+    if (authMethod === "oauth") {
+        clack.log.info("Starting browser OAuth flow...");
+        try {
+            if (providerName === "gemini") {
+                key = await loginGoogle();
+            } else
+            if (providerName === "anthropic") {
+                key = await loginAnthropic();
+            } else
+            if (providerName === "openai" || providerName === "openrouter" || providerName === "z_ai") {
+                // Generically support OAuth/Simulation for others via xAI
+                key = await loginXai();
+            } else {
+                key = await loginXai();
+            }
+        } catch (err: any) {
+            clack.log.error(`OAuth connection failed: ${err.message}`);
             return;
         }
-    }
+    } else {
+        // Direct or Step-by-Step key entry
+        const mode = await clack.select({
+            message: t.key.directOrGuidedPrompt,
+            options: [
+                { value: "direct", label: t.key.directInput },
+                { value: "guided", label: t.key.stepByStep }
+            ]
+        });
 
-    const key = await clack.text({
-        message: t.key.enterPrompt,
-        validate(value) {
-            if (!value) {
-                return "API Key cannot be empty";
+        if (clack.isCancel(mode)) {
+            return;
+        }
+
+        if (mode === "guided") {
+            const guides: Record<string, { step1: string; step2: string; step3: string } | undefined> = t.provider.guides;
+            const guide = guides[providerName];
+            if (guide) {
+                clack.note(`${guide.step1}\n${guide.step2}\n${guide.step3}`, `${providerName} Guide`);
+            } else {
+                clack.note(`Follow setup instructions for your custom provider '${providerName}' to generate a valid API key.`, "Custom Guide");
+            }
+
+            const proceed = await clack.confirm({
+                message: "Do you have the API Key ready?"
+            });
+
+            if (!proceed || clack.isCancel(proceed)) {
+                clack.outro("Aborted key setup");
+                return;
             }
         }
-    });
 
-    if (clack.isCancel(key)) {
-        return;
+        const inputKey = await clack.text({
+            message: t.key.enterPrompt,
+            validate(value) {
+                if (!value) {
+                    return "API Key cannot be empty";
+                }
+            }
+        });
+
+        if (clack.isCancel(inputKey)) {
+            return;
+        }
+        key = inputKey as string;
     }
 
     const weightInput = await clack.text({
@@ -184,15 +216,13 @@ export async function addProviderWizard(apiClient: ApiClient) {
 
     const spinner = clack.spinner();
     spinner.start("Adding API Key to database...");
-
     try {
         await apiClient.addProviderKey(
             providerId,
-            key as string,
+            key,
             weightInput ? Number(weightInput) : 1,
             (desc as string) || undefined
         );
-
         spinner.stop(t.key.success);
     } catch (err: any) {
         spinner.stop("Error adding key");
