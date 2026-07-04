@@ -5,6 +5,7 @@ export const geminiPreset: ProviderPreset = {
     value: "gemini",
     apiType: ApiType.OPENAI,
     baseUrl: "https://generativelanguage.googleapis.com/v1beta/openai/v1",
+    browserLogin: true,
     i18n: {
         en: {
             label: "Google Gemini",

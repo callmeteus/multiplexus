@@ -5,6 +5,7 @@ export const anthropicPreset: ProviderPreset = {
     value: "anthropic",
     apiType: ApiType.ANTHROPIC,
     baseUrl: "https://api.anthropic.com/v1",
+    browserLogin: true,
     i18n: {
         en: {
             label: "Anthropic",

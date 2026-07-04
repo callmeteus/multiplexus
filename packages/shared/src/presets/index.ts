@@ -16,9 +16,30 @@ import { openrouterPreset } from "./providers/OpenRouterPreset";
 import { customPreset } from "./providers/CustomPreset";
 
 export interface ProviderPreset {
+    /**
+     * The value of the preset.
+     */
     value: string;
+
+    /**
+     * The API type of the preset.
+     */
     apiType: ApiType;
+
+    /**
+     * The base URL of the preset.
+     */
     baseUrl: string;
+
+    /**
+     * Free tier offerings for this provider.
+     */
+    freeTier?: string[];
+
+    /**
+     * When true, the CLI may offer browser OAuth login for this provider.
+     */
+    browserLogin?: boolean;
     i18n: {
         en: {
             label: string;
@@ -71,7 +92,8 @@ export function getPresets(lang: string) {
             apiType: p.apiType,
             baseUrl: p.baseUrl,
             freeTier: info.freeTier,
-            guide: info.guide
+            guide: info.guide,
+            browserLogin: p.browserLogin ?? false
         };
     });
 }

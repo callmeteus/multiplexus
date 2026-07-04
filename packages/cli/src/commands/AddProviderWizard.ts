@@ -139,17 +139,22 @@ export async function addProviderWizard(apiClient: ApiClient) {
         }
     }
 
-    // Ask key entry method
-    const authMethod = await clack.select({
-        message: "How would you like to add the API Key/Token?",
-        options: [
-            { value: "manual", label: "Enter key manually" },
-            { value: "oauth", label: "Log in via Web Browser (OAuth/Connection)" }
-        ]
-    });
+    let authMethod: "manual" | "oauth" = "manual";
 
-    if (clack.isCancel(authMethod)) {
-        return;
+    if (selectedPreset.browserLogin) {
+        const authSelection = await clack.select({
+            message: "How would you like to add the API Key/Token?",
+            options: [
+                { value: "manual", label: "Enter key manually" },
+                { value: "oauth", label: "Log in via Web Browser (OAuth/Connection)" }
+            ]
+        });
+
+        if (clack.isCancel(authSelection)) {
+            return;
+        }
+
+        authMethod = authSelection as "manual" | "oauth";
     }
 
     let key = "";
@@ -162,7 +167,8 @@ export async function addProviderWizard(apiClient: ApiClient) {
             } else
             if (presetName === "anthropic") {
                 key = await loginAnthropic();
-            } else {
+            } else
+            if (presetName === "xai") {
                 key = await loginXai();
             }
         } catch (err: any) {
