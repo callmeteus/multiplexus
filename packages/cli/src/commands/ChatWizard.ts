@@ -2,21 +2,23 @@ import * as clack from "@clack/prompts";
 import chalk from "chalk";
 import * as readline from "readline";
 import { ApiClient } from "../ApiClient";
+import { ChatSpinner, askYesNo, ensureReadlineReady } from "../chat/ChatSpinner";
 import { consumeChatStream, formatModelLabel } from "../chat/ChatStream";
 import {
     buildChatSystemPrompt,
     executeToolCalls,
     formatToolResults,
-    hasToolCalls,
+    parseToolCalls,
     SkillContext
 } from "../chat/skills";
-import { detectUserLang, formatToolLabel, isToolOnlyMessage, printTransientOutput } from "../chat/ToolDisplay";
+import { buildAgentNudgeMessage, buildContinueNudge, buildFailedEditNudge, buildMalformedToolNudge, buildTutorialNudge, detectUserLang, formatToolLabel, looksLikeMalformedToolAttempt, printTransientOutput, shouldNudgeAfterExploration, shouldNudgeAgentContinue, shouldNudgeFailedEdit, shouldNudgeListDirLoop, shouldNudgeTutorialInsteadOfTools, stripToolCallsForDisplay } from "../chat/ToolDisplay";
 import { resolveBackend } from "../config/BackendResolution";
 import { ensureCredentials } from "../config/LocalConfig";
 import { t } from "../i18n/index";
 import { handleCancel } from "../utils/ProcessUtils";
 
-const MAX_TOOL_ROUNDS = 8;
+const MAX_TOOL_ROUNDS = 5;
+const MAX_AGENT_NUDGES = 2;
 
 /**
  * Starts the interactive chat client in the terminal.
@@ -51,18 +53,21 @@ export async function chatWizard(apiClient: ApiClient) {
     const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout,
+        terminal: true,
+        crlfDelay: Infinity,
         prompt: chalk.blue.bold(t.chat.prompt)
     });
 
-    let activeSpinner: ReturnType<typeof clack.spinner> | null = null;
     let sessionLang = defaultLang;
+    let processing = false;
+    let exiting = false;
+    let activeSpinner: ChatSpinner | null = null;
 
     const skillContext: SkillContext = {
         projectRoot,
         cwd,
         approve: async (skillName, args) => {
-            rl.pause();
-            activeSpinner?.stop("");
+            activeSpinner?.stop();
 
             let message = t.chat.approveSkill.replace("{skill}", skillName);
 
@@ -76,9 +81,7 @@ export async function chatWizard(apiClient: ApiClient) {
                     : `Write/overwrite file?\n${args.path}`;
             }
 
-            const approved = await clack.confirm({ message });
-            rl.resume();
-            return approved === true;
+            return askYesNo(rl, message);
         }
     };
 
@@ -97,25 +100,44 @@ export async function chatWizard(apiClient: ApiClient) {
     rl.prompt();
 
     rl.on("line", async (line) => {
+        if (processing || exiting) {
+            return;
+        }
+
         const input = line.trim();
 
         if (input.toLowerCase() === "/exit") {
+            exiting = true;
             rl.close();
             return;
         }
 
         if (!input) {
+            ensureReadlineReady(rl);
             rl.prompt();
             return;
         }
 
+        processing = true;
         sessionLang = detectUserLang(input);
         messages[0] = { role: "system", content: buildChatSystemPrompt(skillContext, sessionLang) };
         messages.push({ role: "user", content: input });
 
-        const spinner = clack.spinner();
+        const spinner = new ChatSpinner();
         activeSpinner = spinner;
-        spinner.start(t.chat.thinking);
+        let nudgeCount = 0;
+        let awaitingPostToolReply = false;
+        let turnHeaderPrinted = false;
+        let turnLineOpen = false;
+
+        const formatThinkingLabel = (round: number, provider: string, targetModel: string): string => {
+            const progress = chalk.gray(`(${round}/${MAX_TOOL_ROUNDS})`);
+            if (targetModel && provider) {
+                return `${t.chat.thinking} ${progress} ${chalk.gray(`→ ${targetModel} via ${provider}`)}`;
+            }
+
+            return `${t.chat.thinking} ${progress}`;
+        };
 
         try {
             let round = 0;
@@ -124,22 +146,23 @@ export async function chatWizard(apiClient: ApiClient) {
 
             while (round < MAX_TOOL_ROUNDS) {
                 round++;
+                spinner.start(formatThinkingLabel(round, lastProvider, lastTargetModel));
+                activeSpinner = spinner;
+
                 const response = await apiClient.sendChatCompletionStream(model, messages);
 
                 if (!response.ok) {
-                    spinner.stop("");
+                    spinner.stop();
                     const errorText = await response.text().catch(() => "");
                     console.log(chalk.red(`\n${t.chat.error.replace("{message}", response.statusText + " " + errorText)}`));
                     messages.pop();
-                    rl.prompt();
                     return;
                 }
 
                 if (!response.body) {
-                    spinner.stop("");
+                    spinner.stop();
                     console.log(chalk.red(`\n${t.chat.error.replace("{message}", "No response body received")}`));
                     messages.pop();
-                    rl.prompt();
                     return;
                 }
 
@@ -147,53 +170,114 @@ export async function chatWizard(apiClient: ApiClient) {
                 lastTargetModel = response.headers.get("x-mux-model") || response.headers.get("X-Mux-Model") || "";
 
                 if (lastTargetModel && lastProvider) {
-                    spinner.message(
-                        t.chat.responding
-                            .replace("{model}", lastTargetModel)
-                            .replace("{provider}", lastProvider)
-                    );
+                    spinner.update(formatThinkingLabel(round, lastProvider, lastTargetModel));
                 }
 
-                let headerPrinted = false;
                 const { text: assistantResponse } = await consumeChatStream(response, {
                     onFirstVisibleToken: () => {
-                        spinner.stop("");
-                        if (!headerPrinted) {
+                        if (awaitingPostToolReply) {
+                            return;
+                        }
+
+                        spinner.stop();
+                        if (!turnHeaderPrinted) {
                             process.stdout.write(`${formatModelLabel(model, lastProvider, lastTargetModel)} ${chalk.gray(">")} `);
-                            headerPrinted = true;
+                            turnHeaderPrinted = true;
+                            turnLineOpen = true;
                         }
                     },
-                    onTextUpdate: (_full, delta) => {
-                        process.stdout.write(delta);
+                    onTextUpdate: (full, delta) => {
+                        if (parseToolCalls(full).length > 0 || awaitingPostToolReply) {
+                            return;
+                        }
+
+                        if (delta) {
+                            process.stdout.write(delta);
+                        }
                     }
                 });
 
-                const toolOnly = isToolOnlyMessage(assistantResponse);
+                const visibleText = stripToolCallsForDisplay(assistantResponse);
+                const hasTools = parseToolCalls(assistantResponse).length > 0;
+                spinner.stop();
 
-                if (!headerPrinted && !toolOnly) {
-                    spinner.stop("");
+                if (visibleText && !turnHeaderPrinted && !hasTools) {
                     process.stdout.write(`${formatModelLabel(model, lastProvider, lastTargetModel)} ${chalk.gray(">")} `);
-                    headerPrinted = true;
-                } else if (toolOnly) {
-                    spinner.stop("");
+                    process.stdout.write(visibleText);
+                    turnHeaderPrinted = true;
+                    turnLineOpen = true;
                 }
 
-                if (headerPrinted) {
+                if (turnLineOpen && visibleText && !hasTools) {
                     console.log();
-                    console.log();
+                    turnLineOpen = false;
                 }
 
-                if (!assistantResponse) {
+                if (!assistantResponse.trim()) {
+                    if (nudgeCount < MAX_AGENT_NUDGES && (awaitingPostToolReply || shouldNudgeAfterExploration(messages, input))) {
+                        nudgeCount++;
+                        messages.push({ role: "user", content: buildContinueNudge(sessionLang, awaitingPostToolReply, input) });
+                        awaitingPostToolReply = false;
+                        spinner.start(formatThinkingLabel(round, lastProvider, lastTargetModel));
+                        continue;
+                    }
+
                     break;
                 }
 
-                messages.push({ role: "assistant", content: assistantResponse });
+                awaitingPostToolReply = false;
 
-                if (!hasToolCalls(assistantResponse)) {
+                const parsedCalls = parseToolCalls(assistantResponse);
+                const isTutorial = parsedCalls.length === 0
+                    && shouldNudgeTutorialInsteadOfTools(input, assistantResponse);
+
+                if (isTutorial) {
+                    console.log(chalk.yellow(sessionLang === "pt"
+                        ? "\n↳ Tutorial ignorado — redirecionando para ferramentas..."
+                        : "\n↳ Tutorial ignored — redirecting to tools..."));
+                    messages.push({
+                        role: "assistant",
+                        content: sessionLang === "pt"
+                            ? "(resposta com tutorial omitida)"
+                            : "(tutorial response omitted)"
+                    });
+                } else {
+                    messages.push({ role: "assistant", content: assistantResponse });
+                }
+
+                if (parsedCalls.length === 0) {
+                    if (nudgeCount < MAX_AGENT_NUDGES && isTutorial) {
+                        nudgeCount++;
+                        messages.push({ role: "user", content: buildTutorialNudge(sessionLang, input) });
+                        spinner.start(formatThinkingLabel(round, lastProvider, lastTargetModel));
+                        continue;
+                    }
+
+                    if (nudgeCount < MAX_AGENT_NUDGES && looksLikeMalformedToolAttempt(assistantResponse)) {
+                        nudgeCount++;
+                        messages.push({ role: "user", content: buildMalformedToolNudge(sessionLang) });
+                        spinner.start(formatThinkingLabel(round, lastProvider, lastTargetModel));
+                        continue;
+                    }
+
+                    if (nudgeCount < MAX_AGENT_NUDGES && shouldNudgeAgentContinue(input, assistantResponse)) {
+                        nudgeCount++;
+                        messages.push({ role: "user", content: buildAgentNudgeMessage(sessionLang, input) });
+                        spinner.start(formatThinkingLabel(round, lastProvider, lastTargetModel));
+                        continue;
+                    }
+
+                    if (nudgeCount < MAX_AGENT_NUDGES && shouldNudgeAfterExploration(messages, input)) {
+                        nudgeCount++;
+                        messages.push({ role: "user", content: buildContinueNudge(sessionLang, true, input) });
+                        spinner.start(formatThinkingLabel(round, lastProvider, lastTargetModel));
+                        continue;
+                    }
+
                     break;
                 }
 
-                const toolSpinner = clack.spinner();
+                const toolSpinner = new ChatSpinner();
                 activeSpinner = toolSpinner;
 
                 const toolResults = await executeToolCalls(skillContext, assistantResponse, {
@@ -206,31 +290,69 @@ export async function chatWizard(apiClient: ApiClient) {
                         }
 
                         const status = result.ok ? chalk.green("✓") : chalk.red("✗");
-                        toolSpinner.stop(`${status} ${formatToolLabel(call.name, call.arguments)}`);
+                        const label = formatToolLabel(call.name, call.arguments);
+                        const suffix = !result.ok && result.output ? chalk.gray(` — ${result.output}`) : "";
+                        toolSpinner.stop(`${status} ${label}${suffix}`);
                     }
                 });
 
                 activeSpinner = null;
                 messages.push({ role: "user", content: formatToolResults(toolResults) });
-                spinner.start(t.chat.thinking);
+
+                const visibleProse = stripToolCallsForDisplay(assistantResponse);
+                if (nudgeCount < MAX_AGENT_NUDGES && visibleProse && shouldNudgeTutorialInsteadOfTools(input, visibleProse)) {
+                    nudgeCount++;
+                    messages.push({ role: "user", content: buildTutorialNudge(sessionLang, input) });
+                } else if (nudgeCount < MAX_AGENT_NUDGES && visibleProse && shouldNudgeAgentContinue(input, visibleProse)) {
+                    nudgeCount++;
+                    messages.push({ role: "user", content: buildAgentNudgeMessage(sessionLang, input) });
+                } else if (nudgeCount < MAX_AGENT_NUDGES && shouldNudgeFailedEdit(messages)) {
+                    nudgeCount++;
+                    messages.push({ role: "user", content: buildFailedEditNudge(sessionLang) });
+                } else if (nudgeCount < MAX_AGENT_NUDGES && shouldNudgeListDirLoop(messages)) {
+                    nudgeCount++;
+                    messages.push({ role: "user", content: buildContinueNudge(sessionLang, true, input) });
+                }
+
+                awaitingPostToolReply = true;
+                spinner.start(formatThinkingLabel(round, lastProvider, lastTargetModel));
                 activeSpinner = spinner;
             }
+
+            if (round >= MAX_TOOL_ROUNDS && awaitingPostToolReply) {
+                spinner.stop();
+                console.log(chalk.yellow(`\n${sessionLang === "pt"
+                    ? `Limite de ${MAX_TOOL_ROUNDS} rodadas atingido — envie outra mensagem para continuar.`
+                    : `Reached ${MAX_TOOL_ROUNDS} round limit — send another message to continue.`}`));
+            }
         } catch (err: any) {
-            spinner.stop("");
-            activeSpinner = null;
+            spinner.stop();
             console.log(chalk.red(`\n${t.chat.error.replace("{message}", err.message)}`));
             messages.pop();
+        } finally {
+            processing = false;
+            activeSpinner = null;
+            ensureReadlineReady(rl);
+            rl.prompt();
         }
-
-        rl.prompt();
-        activeSpinner = null;
     });
 
     rl.on("SIGINT", () => {
+        if (exiting) {
+            return;
+        }
+
+        exiting = true;
+        activeSpinner?.stop();
+        console.log();
         rl.close();
     });
 
     rl.on("close", () => {
+        if (!exiting) {
+            return;
+        }
+
         console.log();
         clack.outro(t.common.bye);
     });

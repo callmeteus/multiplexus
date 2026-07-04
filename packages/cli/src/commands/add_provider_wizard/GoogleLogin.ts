@@ -36,7 +36,7 @@ export async function loginGoogle(): Promise<string> {
         });
 
         server.listen(port, () => {
-            const targetUrl = `https://decolua.github.io/9router/connect?provider=gemini&port=${port}`;
+            const targetUrl = `http://localhost:3000/api/auth/connect?provider=gemini&port=${port}`;
             openUrlInBrowser(targetUrl);
         });
     });

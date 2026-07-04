@@ -10,26 +10,32 @@ import { Skill } from "./Types";
 function buildPlanningGuidance(lang: string): string[] {
     if (lang === "pt") {
         return [
-            "## Planejamento",
-            "- Tarefas com 2+ passos: esboce um plano curto antes de agir.",
-            "- Explore (list_dir, read_file) antes de editar.",
-            "- Prefira diffs mínimos e focados; não refatore o que não foi pedido.",
-            "- Siga convenções do código existente (nomes, imports, estilo).",
-            "- Não adicione abstrações, testes ou docs extras sem pedido.",
-            "- Execute o plano passo a passo; use ferramentas entre os passos.",
-            "- Quando terminar, responda em texto normal resumindo o que fez."
+            "## Execução",
+            "- Pedido de ação/correção: use ferramentas IMEDIATAMENTE — não pare só dizendo o que vai fazer.",
+            "- Primeira resposta a uma tarefa: <tool_call>(s) para explorar (list_dir, read_file), não texto de intenção.",
+            "- Não peça mais detalhes se você pode explorar o código com ferramentas.",
+            "- Nunca diga que não pode ajudar — você PODE ler e editar arquivos do projeto.",
+            "- Explore antes de editar; depois find_and_replace com diff mínimo.",
+            "- Após read_file/list_dir, SEMPRE aplique find_and_replace antes de responder em texto.",
+            "- NUNCA escreva tutorial, passo-a-passo ou blocos de código no chat — use find_and_replace.",
+            "- NUNCA invente arquivos novos nem sugira npm install para corrigir bugs.",
+            "- Siga convenções do código existente; não refatore o que não foi pedido.",
+            "- Continue chamando ferramentas até concluir; só então resuma em texto."
         ];
     }
 
     return [
-        "## Planning",
-        "- Multi-step tasks: outline a short plan before acting.",
-        "- Explore (list_dir, read_file) before editing.",
-        "- Prefer minimal, focused diffs; don't refactor unrelated code.",
-        "- Match existing conventions (naming, imports, style).",
-        "- Don't add abstractions, tests, or docs unless asked.",
-        "- Execute the plan step by step; use tools between steps.",
-        "- When done, reply in plain text summarizing what you did."
+        "## Execution",
+        "- Action/fix request: use tools IMMEDIATELY — never stop at intent-only replies.",
+        "- First response to a task: <tool_call>(s) to explore (list_dir, read_file), not prose about what you will do.",
+        "- Do not ask for more details if you can explore the code with tools.",
+        "- Never say you cannot help — you CAN read and edit project files.",
+        "- Explore before editing; then find_and_replace with minimal diffs.",
+        "- After read_file/list_dir, ALWAYS apply find_and_replace before replying in text.",
+        "- NEVER write tutorials, step-by-step guides, or code blocks in chat — use find_and_replace.",
+        "- NEVER invent new files or suggest npm install to fix bugs.",
+        "- Match existing code conventions; don't refactor unrelated code.",
+        "- Keep calling tools until done; only then summarize in plain text."
     ];
 }
 
@@ -103,20 +109,36 @@ export function buildChatSystemPrompt(ctx: SkillContext, lang: string): string {
             "- No placeholders (\"...\", \"updated content\", etc.)."
         ];
 
-    const usage = isPt
+    const formatRules = isPt
         ? [
-            "Para usar ferramentas, responda SOMENTE com blocos <tool_call> JSON - sem texto misturado:",
-            ...examples,
-            "O usuário não vê os blocos <tool_call>; ele vê apenas o status da ferramenta.",
-            "Após <tool_result>, continue até concluir.",
-            "Quando terminar, responda em texto normal sem <tool_call>."
+            "## Formato de ferramentas (obrigatório)",
+            "CORRETO:",
+            '<tool_call>{"name":"read_file","arguments":{"path":"packages/cli/src/index.ts"}}</tool_call>',
+            "ERRADO: ```python, ```json, JSON solto, <|tool_call_start|>, [find_and_replace(...)], ou texto misturado.",
+            "Tarefa nova: primeira resposta = só <tool_call>(s) de exploração (list_dir, read_file).",
+            "O usuário não vê <tool_call>; vê apenas ✓/✗ da ferramenta.",
+            "Após <tool_result>, continue com mais ferramentas até terminar.",
+            "Só no final: texto normal sem <tool_call>."
         ]
         : [
-            "To use tools, respond ONLY with <tool_call> JSON blocks - no mixed prose:",
-            ...examples,
-            "The user does not see <tool_call> blocks; they only see tool status.",
-            "After <tool_result>, continue until done.",
-            "When finished, reply in plain text without <tool_call>."
+            "## Tool format (required)",
+            "CORRECT:",
+            '<tool_call>{"name":"read_file","arguments":{"path":"packages/cli/src/index.ts"}}</tool_call>',
+            "WRONG: ```python, ```json, bare JSON, <|tool_call_start|>, [find_and_replace(...)], or mixed prose.",
+            "New task: first reply = only exploration <tool_call>(s) (list_dir, read_file).",
+            "The user does not see <tool_call>; only tool ✓/✗ status.",
+            "After <tool_result>, keep using tools until done.",
+            "Only at the end: plain text without <tool_call>."
+        ];
+
+    const usage = isPt
+        ? [
+            "Exemplos por ferramenta:",
+            ...examples
+        ]
+        : [
+            "Examples per tool:",
+            ...examples
         ];
 
     return [
@@ -130,6 +152,8 @@ export function buildChatSystemPrompt(ctx: SkillContext, lang: string): string {
         "",
         toolsHeader,
         ...toolLines,
+        "",
+        ...formatRules,
         "",
         ...usage
     ].join("\n");

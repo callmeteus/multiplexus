@@ -36,7 +36,7 @@ export async function loginAnthropic(): Promise<string> {
         });
 
         server.listen(port, () => {
-            const targetUrl = `https://decolua.github.io/9router/connect?provider=anthropic&port=${port}`;
+            const targetUrl = `http://localhost:3000/api/auth/connect?provider=anthropic&port=${port}`;
             openUrlInBrowser(targetUrl);
         });
     });

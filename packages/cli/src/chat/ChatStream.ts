@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import { stripToolCallsForDisplay } from "./ToolDisplay";
 
 export interface StreamResult {
     text: string;
@@ -7,9 +8,16 @@ export interface StreamResult {
 }
 
 export interface StreamOptions {
-    /** Called when the first visible (non-tool_call) token arrives. */
+    /**
+     * Called when the first visible (non-tool_call) token arrives.
+     */
     onFirstVisibleToken?: () => void;
-    /** Called with the full accumulated text on each content delta. */
+
+    /**
+     * Called with the full accumulated text on each content delta.
+     * @param fullText The full accumulated text.
+     * @param visibleDelta The visible delta.
+     */
     onTextUpdate?: (fullText: string, visibleDelta: string) => void;
 }
 
@@ -37,9 +45,9 @@ export async function consumeChatStream(
             return;
         }
 
-        const prevVisible = stripPartialToolCalls(assistantResponse);
+        const prevVisible = stripToolCallsForDisplay(assistantResponse);
         assistantResponse += content;
-        const nextVisible = stripPartialToolCalls(assistantResponse);
+        const nextVisible = stripToolCallsForDisplay(assistantResponse);
         const delta = nextVisible.startsWith(prevVisible)
             ? nextVisible.slice(prevVisible.length)
             : nextVisible;
@@ -107,17 +115,6 @@ export async function consumeChatStream(
     buffer = processLines(buffer + "\n");
 
     return { text: assistantResponse, provider, targetModel };
-}
-
-/**
- * Strips tool_call blocks and partial openings from display text.
- * @param text The raw assistant text.
- */
-function stripPartialToolCalls(text: string): string {
-    return text
-        .replace(/<tool_call>[\s\S]*?<\/tool_call>/g, "")
-        .replace(/<tool_call>[\s\S]*$/g, "")
-        .trim();
 }
 
 /**

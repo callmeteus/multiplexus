@@ -36,7 +36,7 @@ export async function loginXai(): Promise<string> {
         });
 
         server.listen(port, () => {
-            const targetUrl = `https://decolua.github.io/9router/connect?provider=xai&port=${port}`;
+            const targetUrl = `http://localhost:3000/api/auth/connect?provider=xai&port=${port}`;
             openUrlInBrowser(targetUrl);
         });
     });
