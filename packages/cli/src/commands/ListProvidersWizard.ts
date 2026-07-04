@@ -1,4 +1,5 @@
 import * as clack from "@clack/prompts";
+import chalk from "chalk";
 import { getPresets } from "@multiplexus/shared";
 import { ApiClient } from "../ApiClient";
 import { ensureCredentials } from "../config/LocalConfig";
@@ -49,7 +50,7 @@ export async function listProvidersWizard(apiClient: ApiClient) {
     });
 
     for (const item of list) {
-        const symbol = item.isConfigured ? "🟢" : "⚪";
+        const symbol = item.isConfigured ? chalk.green("[*]") : chalk.gray("[ ]");
         const statusText = item.isConfigured 
             ? (isPt ? "CONFIGURADO/ATIVO" : "CONFIGURED/ACTIVE") 
             : (isPt ? "Não configurado" : "Not configured");

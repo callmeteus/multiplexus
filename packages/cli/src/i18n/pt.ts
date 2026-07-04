@@ -15,7 +15,7 @@ export const pt: Dictionary = {
         addRoute: "Configurar Rota de Modelo",
         addUser: "Gerar Chave API de Cliente",
         listUsers: "Listar Chaves API de Clientes",
-        managePlugins: "Gerenciar Plugins de Clientes (ex: Caveman)",
+        managePlugins: "Gerenciar Plugins de Clientes",
         helpGuide: "Guia de Ajuda e Setup",
         startServer: "Iniciar Servidor do Roteador Local",
         stopServer: "Parar Servidor do Roteador Local",
@@ -23,12 +23,12 @@ export const pt: Dictionary = {
     },
 
     provider: {
-        namePrompt: "Digite o nome do provider (ex: openrouter, local-ollama):",
+        namePrompt: "Digite o nome do provider:",
         typePrompt: "Selecione o tipo de API:",
         baseUrlPrompt: "Digite a URL Base da API (deixe em branco para o padrão):",
         selectPrompt: "Selecione um provider:",
-        freeTierBadge: "★ grátis",
-        freeTierLegend: "★ = tier gratuito disponível",
+        freeTierBadge: "grátis",
+        freeTierLegend: "tier gratuito disponível",
         success: "Provider registrado com sucesso!"
     },
 
@@ -43,15 +43,15 @@ export const pt: Dictionary = {
     },
 
     route: {
-        routerModelPrompt: "Digite o nome do modelo exposto (ex: gpt-4o, smart-model):",
-        providerModelPrompt: "Digite o nome real do modelo no provider (ex: gpt-4o-mini, claude-3-5-sonnet-latest):",
+        routerModelPrompt: "Digite o nome do modelo exposto:",
+        providerModelPrompt: "Digite o nome real do modelo no provider:",
         priorityPrompt: "Digite a prioridade (menor é tentado primeiro, ex: 1 para primário, 2 para failover):",
         weightPrompt: "Digite o peso da rota (para balanceamento, padrão: 1):",
         success: "Rota de modelo configurada com sucesso!"
     },
 
     user: {
-        namePrompt: "Digite um nome para o cliente/dono da chave (ex: frontend-app):",
+        namePrompt: "Digite um nome para o cliente/dono da chave:",
         rolePrompt: "Selecione o papel do usuário:",
         roleAdmin: "Admin (pode configurar o roteador)",
         roleUser: "Usuário (só pode fazer chat completions)",
@@ -65,7 +65,7 @@ export const pt: Dictionary = {
         workflowTitle: "Fluxo de Uso",
         workflow: [
             "1. Registre um provider e adicione sua chave de API.",
-            "2. Defina rotas de modelo (ex: mapeie 'gpt-4o' → 'openai/gpt-4o-mini').",
+            "2. Defina rotas de modelo.",
             "3. Crie chaves de API de cliente para apps que usarão o roteador."
         ],
         providers: [

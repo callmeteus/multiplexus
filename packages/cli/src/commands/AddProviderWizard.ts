@@ -1,4 +1,5 @@
 import * as clack from "@clack/prompts";
+import chalk from "chalk";
 import { ApiType, getPresets } from "@multiplexus/shared";
 import { ApiClient } from "../ApiClient";
 import { ensureCredentials } from "../config/LocalConfig";
@@ -14,10 +15,9 @@ import { loginXai } from "./add_provider_wizard/XaiLogin";
  * @returns The formatted preset label.
  */
 function formatPresetLabel(preset: { label: string; freeTier?: string[] }, isConfigured: boolean): string {
-    const symbol = isConfigured ? "🟢 " : "⚪ ";
-
+    const symbol = isConfigured ? chalk.green("[*] ") : chalk.gray("[ ] ");
     if (preset.freeTier && preset.freeTier.length > 0) {
-        return `${symbol}${preset.label} ${t.provider.freeTierBadge}`;
+        return `${symbol}${preset.label} ${chalk.yellow("(*)")} ${t.provider.freeTierBadge}`;
     }
 
     return `${symbol}${preset.label}`;
@@ -46,7 +46,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
     const providers = await apiClient.getProviders().catch(() => [] as any[]);
 
     if (presets.some(p => p.freeTier?.length > 0)) {
-        clack.note(t.provider.freeTierLegend);
+        clack.note(`${chalk.yellow("(*)")} = ${t.provider.freeTierLegend}`);
     }
 
     const selection = await clack.select({

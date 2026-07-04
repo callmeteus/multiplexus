@@ -13,8 +13,9 @@
         "start": "tsx src/index.ts"
     },
     "dependencies": {
-        "@multiplexus/shared": "*",
         "@clack/prompts": "^0.7.0",
+        "@multiplexus/shared": "*",
+        "chalk": "^5.6.2",
         "yargs": "^18.0.0"
     },
     "devDependencies": {

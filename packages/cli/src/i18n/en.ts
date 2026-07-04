@@ -13,7 +13,7 @@ export const en = {
         addRoute: "Configure Model Route",
         addUser: "Generate Client API Key",
         listUsers: "List Client API Keys",
-        managePlugins: "Manage Client Plugins (e.g. Caveman)",
+        managePlugins: "Manage Client Plugins",
         helpGuide: "Help & Setup Guide",
         startServer: "Start Local Router Server",
         stopServer: "Stop Local Router Server",
@@ -21,12 +21,12 @@ export const en = {
     },
 
     provider: {
-        namePrompt: "Enter provider name (e.g. openrouter, local-ollama):",
+        namePrompt: "Enter provider name:",
         typePrompt: "Select API Type preset:",
         baseUrlPrompt: "Enter API Base URL (leave empty for default):",
         selectPrompt: "Select a provider:",
-        freeTierBadge: "★ free",
-        freeTierLegend: "★ = free tier available",
+        freeTierBadge: "free",
+        freeTierLegend: "free tier available",
         success: "Provider successfully registered!"
     },
 
@@ -43,13 +43,13 @@ export const en = {
     route: {
         routerModelPrompt: "Enter the exposed model name (e.g. gpt-4o, smart-model):",
         providerModelPrompt: "Enter the provider's actual model name (e.g. gpt-4o-mini, claude-3-5-sonnet-latest):",
-        priorityPrompt: "Enter priority (lower is tried first, e.g. 1 for primary, 2 for failover):",
+        priorityPrompt: "Enter priority (lower is tried first):",
         weightPrompt: "Enter routing weight (for load balancing, default: 1):",
         success: "Model route configured successfully!"
     },
 
     user: {
-        namePrompt: "Enter a name for the client/key owner (e.g. frontend-app):",
+        namePrompt: "Enter a name for the client/key owner:",
         rolePrompt: "Select user role:",
         roleAdmin: "Admin (can configure router)",
         roleUser: "User (can only query chat completions)",
@@ -64,7 +64,7 @@ export const en = {
 
         workflow: [
             "1. Register a provider and add its API key.",
-            "2. Define model routes (e.g. map 'gpt-4o' → 'openai/gpt-4o-mini').",
+            "2. Define model routes.",
             "3. Create client API keys for apps that will use the router."
         ],
 
