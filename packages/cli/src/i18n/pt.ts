@@ -28,7 +28,22 @@ export const pt: Dictionary = {
         managePlugins: "Gerenciar Plugins do Servidor",
         helpGuide: "Visualizar Guia de Setup de Providers",
         exit: "Sair",
-        back: "Voltar para o Menu Principal"
+        back: "Voltar para o Menu Principal",
+        chatCategory: "Cliente de Chat Interativo"
+    },
+
+    chat: {
+        selectRouter: "Selecione o roteador (modelo exposto) para conversar:",
+        noRoutes: "Nenhuma rota de modelo configurada ainda. Por favor, configure uma rota primeiro.",
+        welcome: "Conversando com {model}\nDigite '/exit' ou pressione Ctrl+C para sair.",
+        prompt: "Você > ",
+        responsePrefix: "{model} > ",
+        error: "Erro: {message}",
+        thinking: "Pensando...",
+        responding: "{model} via {provider} está digitando...",
+        runningTools: "Executando ferramentas...",
+        skillsHint: "Skills de código ativas: read_file, write_file, search_replace, list_dir",
+        cwdHint: "cwd: {cwd}"
     },
 
     provider: {
@@ -282,7 +297,8 @@ export const pt: Dictionary = {
         userListDesc: "Lista todos os clientes e suas chaves ativas",
         userDemand: "Especifique uma ação: create ou list",
         pluginToggleDesc: "Habilita ou desabilita plugins de usuários (ex: Caveman)",
-        pluginDemand: "Especifique uma ação: toggle"
+        pluginDemand: "Especifique uma ação: toggle",
+        chatDesc: "Inicia uma sessão de chat interativo no terminal com um modelo do roteador"
     },
     plugin: {
         selectUserPrompt: "Selecione a chave de cliente para gerenciar os plugins:",

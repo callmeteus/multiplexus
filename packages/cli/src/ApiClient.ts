@@ -328,4 +328,31 @@ export class ApiClient {
             throw err;
         }
     }
+
+    /**
+     * Sends a chat completion request to the server and returns the raw Response for streaming.
+     * @param model The router model name.
+     * @param messages The chat messages history.
+     */
+    async sendChatCompletionStream(model: string, messages: any[]): Promise<Response> {
+        const url = `${this.baseUrl}/v1/chat/completions`;
+
+        const headers: Record<string, string> = {
+            "Content-Type": "application/json"
+        };
+
+        if (this.adminKey) {
+            headers["Authorization"] = `Bearer ${this.adminKey}`;
+        }
+
+        return fetch(url, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({
+                model,
+                messages,
+                stream: true
+            })
+        });
+    }
 }

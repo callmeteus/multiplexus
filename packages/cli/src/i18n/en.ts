@@ -26,7 +26,22 @@ export const en = {
         managePlugins: "Manage Server Plugins",
         helpGuide: "View Provider Setup Guide",
         exit: "Exit",
-        back: "Back to Main Menu"
+        back: "Back to Main Menu",
+        chatCategory: "Interactive Chat Client"
+    },
+
+    chat: {
+        selectRouter: "Select the router (exposed model) to chat with:",
+        noRoutes: "No model routes configured yet. Please configure a route first.",
+        welcome: "Chatting with {model}\nType '/exit' or press Ctrl+C to quit.",
+        prompt: "You > ",
+        responsePrefix: "{model} > ",
+        error: "Error: {message}",
+        thinking: "Thinking...",
+        responding: "{model} via {provider} is typing...",
+        runningTools: "Running tools...",
+        skillsHint: "Code skills enabled: read_file, write_file, search_replace, list_dir",
+        cwdHint: "cwd: {cwd}"
     },
 
     provider: {
@@ -283,7 +298,8 @@ export const en = {
         userListDesc: "List all client users and their active keys",
         userDemand: "Specify an action: create or list",
         pluginToggleDesc: "Enable or disable user plugins (e.g. Caveman)",
-        pluginDemand: "Specify an action: toggle"
+        pluginDemand: "Specify an action: toggle",
+        chatDesc: "Start an interactive terminal chat session with a router model"
     },
     plugin: {
         selectUserPrompt: "Select a client key to manage plugins for:",

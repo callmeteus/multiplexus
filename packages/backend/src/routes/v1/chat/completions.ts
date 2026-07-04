@@ -147,11 +147,40 @@ export const POST = async (request: FastifyRequest, reply: FastifyReply) => {
 
                     // Diagnostic headers
                     reply.header("X-Mux-Provider", selectedRoute.provider.name);
+                    reply.header("X-Mux-Model", selectedRoute.providerModel);
                     reply.header("X-Mux-Attempts", String(attempts));
                     reply.headers(providerResponse.headers);
 
                     if (providerResponse.isStream) {
-                        reply.send(Readable.fromWeb(providerResponse.body as any));
+                        const streamHeaders = {
+                            ...reply.getHeaders(),
+                            ...providerResponse.headers,
+                            "Cache-Control": "no-cache",
+                            "Connection": "keep-alive"
+                        };
+
+                        delete (streamHeaders as any)["content-length"];
+
+                        reply.raw.writeHead(200, streamHeaders as any);
+
+                        const body = providerResponse.body as any;
+                        if (body && typeof body.getReader === "function") {
+                            const reader = body.getReader();
+                            while (true) {
+                                const { done, value } = await reader.read();
+                                if (done) {
+                                    break;
+                                }
+                                reply.raw.write(value);
+                            }
+                        } else
+                        if (body && typeof body[Symbol.asyncIterator] === "function") {
+                            for await (const chunk of body) {
+                                reply.raw.write(chunk);
+                            }
+                        }
+
+                        reply.raw.end();
                     } else {
                         reply.send(providerResponse.body);
                     }
@@ -160,6 +189,7 @@ export const POST = async (request: FastifyRequest, reply: FastifyReply) => {
                 } catch (err: any) {
                     lastError = err;
                     const status: number | undefined = err.status ?? err.statusCode;
+
                     logger.warn(
                         `Attempt ${attempts} failed via provider '${selectedRoute.provider.name}' ` +
                         `(keyId=${selectedKey.id}): [${status ?? "network"}] ${err.message}`

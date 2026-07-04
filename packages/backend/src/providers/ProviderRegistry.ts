@@ -17,7 +17,8 @@ const REGISTRY: Record<string, BaseProvider> = {
  * @returns The provider.
  */
 export function getProvider(apiType: string): BaseProvider {
-    const provider = REGISTRY[apiType];
+    const provider = REGISTRY[apiType.toUpperCase()];
+
     if (!provider) {
         throw new Error(`Unsupported API type: ${apiType}`);
     }

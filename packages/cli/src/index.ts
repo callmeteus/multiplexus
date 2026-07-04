@@ -16,6 +16,7 @@ import { helpWizard } from "./commands/HelpWizard";
 import { startBackendWizard, stopBackendWizard } from "./commands/StartWizard";
 import { managePluginsWizard } from "./commands/PluginWizard";
 import { listProvidersWizard } from "./commands/ListProvidersWizard";
+import { chatWizard } from "./commands/ChatWizard";
 import { checkServerReady } from "./utils/ProcessUtils";
 import { handleCancel } from "./utils/ProcessUtils";
 
@@ -36,6 +37,7 @@ async function runInteractiveMenu() {
                 { value: "route", label: t.menu.routeCategory },
                 { value: "client", label: t.menu.clientCategory },
                 { value: "system", label: t.menu.systemCategory },
+                { value: "chat", label: t.menu.chatCategory },
                 { value: "exit", label: t.menu.exit }
             ]
         });
@@ -170,6 +172,9 @@ async function runInteractiveMenu() {
             if (systemAction === "help") {
                 await helpWizard();
             }
+        } else
+        if (category === "chat") {
+            await chatWizard(apiClient);
         }
     }
 }
@@ -299,6 +304,14 @@ async function main() {
                         }
                     )
                     .demandCommand(1, t.yargs.pluginDemand);
+            }
+        )
+        .command(
+            "chat",
+            t.yargs.chatDesc,
+            () => {},
+            async () => {
+                await chatWizard(apiClient);
             }
         )
         .command(
