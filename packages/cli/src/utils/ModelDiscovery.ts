@@ -24,7 +24,7 @@ function formatPricePerM(pricePerM: number | null): string {
     }
 
     if (pricePerM === 0) {
-        return chalk.green("FREE");
+        return chalk.green(t.route.priceFree);
     }
 
     if (pricePerM < 0.01) {
@@ -44,12 +44,12 @@ function buildModelOptions(models: any[]): ModelOption[] {
         let pricing: string;
 
         if (m.isFree) {
-            pricing = ` ${chalk.green("[FREE]")}`;
+            pricing = ` ${chalk.green(t.route.priceFreeBadge)}`;
         } else
         if (m.promptPricePerM !== null && m.completionPricePerM !== null) {
             pricing = ` ${chalk.gray(`[in: ${formatPricePerM(m.promptPricePerM)} | out: ${formatPricePerM(m.completionPricePerM)}]`)}`;
         } else {
-            pricing = ` ${chalk.gray("[no pricing info]")}`;
+            pricing = ` ${chalk.gray(t.route.noPricingInfo)}`;
         }
 
         return {
@@ -79,17 +79,21 @@ export async function promptProviderModel(
     let models: any[] | null = null;
 
     const spinner = clack.spinner();
-    spinner.start(`Fetching available models from ${providerName}...`);
+    spinner.start(t.route.fetchingModels.replace("{providerName}", providerName));
     try {
         models = await apiClient.getProviderModels(providerId);
 
         if (models && models.length > 0) {
-            spinner.stop(`Found ${models.length} models for ${providerName}.`);
+            spinner.stop(
+                t.route.foundModels
+                    .replace("{count}", String(models.length))
+                    .replace("{providerName}", providerName)
+            );
         } else {
-            spinner.stop("Model discovery not supported, entering manually.");
+            spinner.stop(t.route.discoveryNotSupported);
         }
     } catch (_err) {
-        spinner.stop("Could not fetch models, entering manually.");
+        spinner.stop(t.route.fetchModelsFailed);
         models = null;
     }
 
@@ -111,7 +115,7 @@ export async function promptProviderModel(
 
     // Filter step — let the user narrow down the list before selecting
     const filterInput = await clack.text({
-        message: `${t.route.modelFilterPrompt} (${chalk.gray("Enter to show all")})`,
+        message: `${t.route.modelFilterPrompt} (${chalk.gray(t.route.filterShowAll)})`,
         placeholder: "e.g. gpt, claude, gemini...",
         defaultValue: ""
     });
@@ -127,7 +131,7 @@ export async function promptProviderModel(
         : models;
 
     if (filteredModels.length === 0) {
-        clack.log.warn(`No models matched "${filterText}". Showing all.`);
+        clack.log.warn(t.route.noModelsMatched.replace("{filter}", filterText));
     }
 
     const displayModels = filteredModels.length > 0 ? filteredModels : models;
@@ -136,7 +140,7 @@ export async function promptProviderModel(
     // Append manual entry option at the bottom
     options.push({
         value: "__manual__",
-        label: chalk.gray("Enter model ID manually...")
+        label: chalk.gray(t.route.enterManually)
     });
 
     const selection = await clack.select({

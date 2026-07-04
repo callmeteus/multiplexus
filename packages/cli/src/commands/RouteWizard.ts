@@ -158,9 +158,12 @@ export async function editRouteWizard(apiClient: ApiClient) {
         options: routes.map((r: any) => {
             const providerName = r.provider?.name || "unknown";
             const statusLabel = r.isActive ? t.route.statusActive : t.route.statusInactive;
+            const detailLabel = t.route.editSelectDetail
+                .replace("{priority}", String(r.priority))
+                .replace("{weight}", String(r.weight));
             return {
                 value: r.id,
-                label: `${r.routerModel} -> ${providerName} (${r.providerModel}) [Priority: ${r.priority}, Weight: ${r.weight}] (${statusLabel})`
+                label: `${r.routerModel} -> ${providerName} (${r.providerModel}) ${detailLabel} (${statusLabel})`
             };
         })
     });
@@ -344,10 +347,10 @@ export async function listRoutesWizard(apiClient: ApiClient) {
     clack.intro(t.menu.listRoutes);
 
     const spinner = clack.spinner();
-    spinner.start("Loading routes...");
+    spinner.start(t.route.loading);
     try {
         const routes = await apiClient.getModelRoutes();
-        spinner.stop("Loaded routes successfully!");
+        spinner.stop(t.route.loadedSuccess);
 
         if (routes.length === 0) {
             clack.log.info(t.route.listEmpty);
@@ -359,13 +362,19 @@ export async function listRoutesWizard(apiClient: ApiClient) {
             .map((r: any) => {
                 const providerName = r.provider?.name || "unknown";
                 const statusLabel = r.isActive ? t.route.statusActive : t.route.statusInactive;
-                return `- Exposed Model: ${r.routerModel}\n  Target:        ${providerName} (${r.providerModel})\n  Priority:      ${r.priority} | Weight: ${r.weight} | Status: ${statusLabel}`;
+                return t.route.listItemFormat
+                    .replace("{routerModel}", r.routerModel)
+                    .replace("{providerName}", providerName)
+                    .replace("{providerModel}", r.providerModel)
+                    .replace("{priority}", String(r.priority))
+                    .replace("{weight}", String(r.weight))
+                    .replace("{status}", statusLabel);
             })
             .join("\n\n");
 
         clack.note(listContent, t.route.listTitle);
     } catch (err: any) {
-        spinner.stop("Error loading routes");
+        spinner.stop(t.route.errorLoading);
         clack.log.error(`${t.common.error} ${err.message}`);
     }
 

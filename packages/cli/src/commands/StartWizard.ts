@@ -192,8 +192,8 @@ export async function startBackendWizard(apiClient: ApiClient) {
     const tsxCli = resolveTsxCli(resolution.projectRoot);
 
     if (!tsxCli) {
-        spinner.stop("Could not find a runnable backend entrypoint.");
-        clack.log.error("tsx is not installed. Run npm install in the multiplexus project root.");
+        spinner.stop(t.start.noEntrypoint);
+        clack.log.error(t.start.tsxNotInstalled);
         clack.outro("");
         return;
     }
@@ -202,7 +202,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
 
     if (!child.pid) {
         spinner.stop(t.start.failed);
-        clack.log.error("Could not start backend process.");
+        clack.log.error(t.start.processStartFailed);
         clack.outro("");
         return;
     }
@@ -218,7 +218,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
         killServerProcess(failedPid);
         clearServerPid(resolution.backendDir);
         spinner.stop(t.start.failed);
-        clack.log.error("Could not establish connection with router backend.");
+        clack.log.error(t.start.connectionFailed);
         clack.log.warn(t.start.checkLogs.replace("{spawnLog}", spawnLogFile).replace("{combinedLog}", getBackendLogHint(resolution.backendDir)));
         clack.outro("");
         return;
@@ -229,7 +229,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
         saveServerPid(resolution.backendDir, runningPid);
     }
 
-    spinner.message("Loading router administrative credentials...");
+    spinner.message(t.start.loadingCredentials);
 
     if (await syncAdminCredentials(apiClient, resolution.backendDir)) {
         spinner.stop(t.start.ready);

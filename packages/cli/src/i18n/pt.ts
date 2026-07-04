@@ -53,8 +53,17 @@ export const pt: Dictionary = {
         oauthFailed: "Conexão OAuth falhou",
         customGuideText: "Siga as instruções de configuração para seu provider customizado '{name}' para gerar uma chave API válida.",
         customGuideTitle: "Guia Customizado",
-        keyReadyConfirm: "Você tem a chave API em mãos?",
-        keySetupAborted: "Configuração de chave abortada"
+        keyReadyConfirm: "Você tem a chave API pronta?",
+        keySetupAborted: "Configuração de chave abortada",
+        presetsOffline: "Presets do backend inacessíveis. Carregou presets do cache offline local.",
+        freeTierOfferingsTitle: "Ofertas do Tier Gratuito do {name}",
+        guideTitle: "Guia do {name}",
+        listTitle: "Providers multiplexus Suportados",
+        loadingKeys: "Carregando chaves ativas do banco de dados...",
+        loadedSuccess: "Carregado com sucesso!",
+        offlineStatus: "Banco de dados inacessível - exibindo status offline.",
+        statusConfigured: "CONFIGURADO/ATIVO",
+        statusNotConfigured: "Não configurado"
     },
 
     key: {
@@ -100,7 +109,22 @@ export const pt: Dictionary = {
         listTitle: "Rotas de Modelos Configuradas:",
         statusActive: "Ativa",
         statusInactive: "Inativa",
-        modelFilterPrompt: "Filtrar modelos por nome ou ID"
+        modelFilterPrompt: "Filtrar modelos por nome ou ID",
+        loading: "Carregando rotas...",
+        loadedSuccess: "Rotas carregadas com sucesso!",
+        errorLoading: "Erro ao carregar rotas",
+        editSelectDetail: "[Prioridade: {priority}, Peso: {weight}]",
+        listItemFormat: "- Modelo Exposto: {routerModel}\n  Destino:       {providerName} ({providerModel})\n  Prioridade:    {priority} | Peso: {weight} | Status: {status}",
+        priceFree: "GRÁTIS",
+        priceFreeBadge: "[GRÁTIS]",
+        noPricingInfo: "[sem info de preço]",
+        fetchingModels: "Buscando modelos disponíveis de {providerName}...",
+        foundModels: "Encontrado(s) {count} modelo(s) para {providerName}.",
+        discoveryNotSupported: "Descoberta de modelos não suportada, inserindo manualmente.",
+        fetchModelsFailed: "Não foi possível buscar modelos, inserindo manualmente.",
+        filterShowAll: "Enter para mostrar todos",
+        noModelsMatched: "Nenhum modelo corresponde a \"{filter}\". Mostrando todos.",
+        enterManually: "Inserir ID do modelo manualmente..."
     },
 
     user: {
@@ -116,7 +140,9 @@ export const pt: Dictionary = {
         errorGenerating: "Erro ao gerar chave de cliente",
         loading: "Carregando chaves de API dos clientes...",
         loadedSuccess: "Usuários ativos carregados com sucesso!",
-        errorLoading: "Erro ao carregar chaves de clientes"
+        errorLoading: "Erro ao carregar chaves de clientes",
+        apiKeyTitle: "Chave de API do Cliente",
+        listItemFormat: "- Nome: {name}\n  Chave: {key}\n  Papel: {role}"
     },
 
     help: {
@@ -158,7 +184,8 @@ export const pt: Dictionary = {
                 description: "Modelos Claude. Requer configuração de faturamento.",
                 keyUrl: "https://console.anthropic.com/settings/keys"
             }
-        ]
+        ],
+        getKeyLabel: "Obtenha sua chave:"
     },
 
     start: {
@@ -197,7 +224,12 @@ export const pt: Dictionary = {
                 name: "Qualquer SDK da OpenAI",
                 instruction: "new OpenAI({ baseURL: '<URL Base>', apiKey: '<chave de cliente>' })"
             }
-        ]
+        ],
+        noEntrypoint: "Não foi possível encontrar um ponto de entrada executável para o backend.",
+        tsxNotInstalled: "O pacote 'tsx' não está instalado. Execute 'npm install' na raiz do projeto multiplexus.",
+        processStartFailed: "Não foi possível iniciar o processo do backend.",
+        connectionFailed: "Não foi possível estabelecer conexão com o backend do roteador.",
+        loadingCredentials: "Carregando credenciais administrativas do roteador..."
     },
 
     stop: {
@@ -237,13 +269,31 @@ export const pt: Dictionary = {
         userActionDesc: "Ação: create | list",
         helpDesc: "Exibe o guia de ajuda de setup de providers",
         pluginDesc: "Gerenciar plugins de clientes",
-        pluginActionDesc: "Ação: toggle"
+        pluginActionDesc: "Ação: toggle",
+        providerAddDesc: "Registra um novo provider e suas chaves",
+        providerListDesc: "Lista todos os providers suportados e ativos",
+        providerDemand: "Especifique uma ação: add ou list",
+        routeAddDesc: "Configura uma nova regra de roteamento de modelo",
+        routeEditDesc: "Edita uma regra de roteamento de modelo existente",
+        routeDeleteDesc: "Exclui uma regra de roteamento de modelo existente",
+        routeListDesc: "Lista todas as regras de roteamento de modelos configuradas",
+        routeDemand: "Especifique uma ação: add, edit, delete ou list",
+        userCreateDesc: "Gera uma nova chave de API de cliente",
+        userListDesc: "Lista todos os clientes e suas chaves ativas",
+        userDemand: "Especifique uma ação: create ou list",
+        pluginToggleDesc: "Habilita ou desabilita plugins de usuários (ex: Caveman)",
+        pluginDemand: "Especifique uma ação: toggle"
     },
     plugin: {
         selectUserPrompt: "Selecione a chave de cliente para gerenciar os plugins:",
         title: "Gerenciar Plugins",
         statusPrompt: "Selecione o plugin para alternar (ativar/desativar):",
         success: "Plugin atualizado com sucesso!",
-        emptyUsers: "Nenhum usuário/cliente cadastrado ainda. Gere uma chave de cliente primeiro."
+        emptyUsers: "Nenhum usuário/cliente cadastrado ainda. Gere uma chave de cliente primeiro.",
+        statusEnabled: "ATIVADO",
+        statusDisabled: "DESATIVADO",
+        updating: "Atualizando status do plugin...",
+        errorUpdating: "Erro ao atualizar plugin",
+        backOption: "< Voltar"
     }
 };

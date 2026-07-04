@@ -34,12 +34,12 @@ export async function managePluginsWizard(apiClient: ApiClient) {
         const plugins = await apiClient.getUserPlugins(userId).catch(() => [] as any[]);
         const pluginOptions = plugins.map((p: any) => ({
             value: p.name,
-            label: `${p.displayName || p.name} [${p.isEnabled ? "ENABLED" : "DISABLED"}] - ${p.description || ""}`
+            label: `${p.displayName || p.name} [${p.isEnabled ? t.plugin.statusEnabled : t.plugin.statusDisabled}] - ${p.description || ""}`
         }));
 
         pluginOptions.push({
             value: "back",
-            label: "< Back"
+            label: t.plugin.backOption
         });
 
         const choice = await clack.select({
@@ -56,12 +56,12 @@ export async function managePluginsWizard(apiClient: ApiClient) {
         const newStatus = targetPlugin ? !targetPlugin.isEnabled : true;
 
         const spinner = clack.spinner();
-        spinner.start("Updating plugin status...");
+        spinner.start(t.plugin.updating);
         try {
             await apiClient.toggleUserPlugin(userId, pluginName, newStatus);
             spinner.stop(t.plugin.success);
         } catch (err: any) {
-            spinner.stop("Error updating plugin");
+            spinner.stop(t.plugin.errorUpdating);
             clack.log.error(`${t.common.error} ${err.message}`);
         }
     }

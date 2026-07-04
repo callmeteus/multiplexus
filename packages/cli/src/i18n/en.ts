@@ -52,7 +52,16 @@ export const en = {
         customGuideText: "Follow setup instructions for your custom provider '{name}' to generate a valid API key.",
         customGuideTitle: "Custom Guide",
         keyReadyConfirm: "Do you have the API Key ready?",
-        keySetupAborted: "Aborted key setup"
+        keySetupAborted: "Aborted key setup",
+        presetsOffline: "Backend presets unreachable. Loaded presets from local offline cache.",
+        freeTierOfferingsTitle: "{name} Free Tier Offerings",
+        guideTitle: "{name} Guide",
+        listTitle: "Supported multiplexus Providers",
+        loadingKeys: "Loading active keys from database...",
+        loadedSuccess: "Loaded successfully!",
+        offlineStatus: "Unreachable database - displaying offline status.",
+        statusConfigured: "CONFIGURED/ACTIVE",
+        statusNotConfigured: "Not configured"
     },
 
     key: {
@@ -98,7 +107,22 @@ export const en = {
         listTitle: "Configured Model Routes:",
         statusActive: "Active",
         statusInactive: "Inactive",
-        modelFilterPrompt: "Filter models by name or ID"
+        modelFilterPrompt: "Filter models by name or ID",
+        loading: "Loading routes...",
+        loadedSuccess: "Loaded routes successfully!",
+        errorLoading: "Error loading routes",
+        editSelectDetail: "[Priority: {priority}, Weight: {weight}]",
+        listItemFormat: "- Exposed Model: {routerModel}\n  Target:        {providerName} ({providerModel})\n  Priority:      {priority} | Weight: {weight} | Status: {status}",
+        priceFree: "FREE",
+        priceFreeBadge: "[FREE]",
+        noPricingInfo: "[no pricing info]",
+        fetchingModels: "Fetching available models from {providerName}...",
+        foundModels: "Found {count} models for {providerName}.",
+        discoveryNotSupported: "Model discovery not supported, entering manually.",
+        fetchModelsFailed: "Could not fetch models, entering manually.",
+        filterShowAll: "Enter to show all",
+        noModelsMatched: "No models matched \"{filter}\". Showing all.",
+        enterManually: "Enter model ID manually..."
     },
 
     user: {
@@ -114,7 +138,9 @@ export const en = {
         errorGenerating: "Error generating client key",
         loading: "Loading client API keys...",
         loadedSuccess: "Loaded active users successfully!",
-        errorLoading: "Error loading client keys"
+        errorLoading: "Error loading client keys",
+        apiKeyTitle: "Client API Key",
+        listItemFormat: "- Name: {name}\n  Key:  {key}\n  Role: {role}"
     },
 
     help: {
@@ -158,7 +184,8 @@ export const en = {
                 description: "Claude models. Requires billing configuration.",
                 keyUrl: "https://console.anthropic.com/settings/keys"
             }
-        ]
+        ],
+        getKeyLabel: "Get your key:"
     },
 
     start: {
@@ -198,7 +225,12 @@ export const en = {
                 name: "Any OpenAI SDK",
                 instruction: "new OpenAI({ baseURL: '<Base URL>', apiKey: '<client key>' })"
             }
-        ]
+        ],
+        noEntrypoint: "Could not find a runnable backend entrypoint.",
+        tsxNotInstalled: "tsx is not installed. Run npm install in the multiplexus project root.",
+        processStartFailed: "Could not start backend process.",
+        connectionFailed: "Could not establish connection with router backend.",
+        loadingCredentials: "Loading router administrative credentials..."
     },
 
     stop: {
@@ -238,14 +270,32 @@ export const en = {
         userActionDesc: "Action: create | list",
         helpDesc: "Show provider setup guide",
         pluginDesc: "Manage client plugins",
-        pluginActionDesc: "Action: toggle"
+        pluginActionDesc: "Action: toggle",
+        providerAddDesc: "Register a new provider and its keys",
+        providerListDesc: "List all supported and active providers",
+        providerDemand: "Specify an action: add or list",
+        routeAddDesc: "Configure a new model routing rule",
+        routeEditDesc: "Edit an existing model routing rule",
+        routeDeleteDesc: "Delete an existing model routing rule",
+        routeListDesc: "List all configured model routing rules",
+        routeDemand: "Specify an action: add, edit, delete or list",
+        userCreateDesc: "Generate a new client API key",
+        userListDesc: "List all client users and their active keys",
+        userDemand: "Specify an action: create or list",
+        pluginToggleDesc: "Enable or disable user plugins (e.g. Caveman)",
+        pluginDemand: "Specify an action: toggle"
     },
     plugin: {
         selectUserPrompt: "Select a client key to manage plugins for:",
         title: "Manage Plugins",
         statusPrompt: "Select a plugin to toggle:",
         success: "Plugin updated successfully!",
-        emptyUsers: "No clients/users registered yet. Generate a client key first."
+        emptyUsers: "No clients/users registered yet. Generate a client key first.",
+        statusEnabled: "ENABLED",
+        statusDisabled: "DISABLED",
+        updating: "Updating plugin status...",
+        errorUpdating: "Error updating plugin",
+        backOption: "< Back"
     }
 };
 

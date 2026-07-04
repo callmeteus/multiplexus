@@ -9,7 +9,7 @@ export async function helpWizard() {
 
     for (const provider of t.help.providers) {
         clack.note(
-            `${provider.description}\nGet your key: ${provider.keyUrl}`,
+            `${provider.description}\n${t.help.getKeyLabel} ${provider.keyUrl}`,
             `${provider.name}  [${provider.tier}]`
         );
     }

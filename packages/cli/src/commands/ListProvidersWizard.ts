@@ -3,7 +3,7 @@ import chalk from "chalk";
 import { getPresets } from "@multiplexus/shared";
 import { ApiClient } from "../ApiClient";
 import { ensureCredentials } from "../config/LocalConfig";
-import { t } from "../i18n/index";
+import { t, currentLang } from "../i18n/index";
 
 /**
  * List all supported providers and their status
@@ -11,20 +11,19 @@ import { t } from "../i18n/index";
  */
 export async function listProvidersWizard(apiClient: ApiClient) {
     await ensureCredentials(apiClient);
-    clack.intro("Supported multiplexus Providers");
+    clack.intro(t.provider.listTitle);
 
-    const isPt = t.menu.welcome.includes("Bem-vindo");
-    const lang = isPt ? "pt" : "en";
+    const lang = currentLang;
 
     const spinner = clack.spinner();
-    spinner.start("Loading active keys from database...");
+    spinner.start(t.provider.loadingKeys);
 
     let keys: any[] = [];
     try {
         keys = await apiClient.getProviderKeys();
-        spinner.stop("Loaded successfully!");
+        spinner.stop(t.provider.loadedSuccess);
     } catch (err: any) {
-        spinner.stop("Unreachable database - displaying offline status.");
+        spinner.stop(t.provider.offlineStatus);
         clack.log.warn(`${t.common.error} ${err.message}`);
     }
 
@@ -52,8 +51,8 @@ export async function listProvidersWizard(apiClient: ApiClient) {
     for (const item of list) {
         const symbol = item.isConfigured ? chalk.green("[*]") : chalk.gray("[ ]");
         const statusText = item.isConfigured 
-            ? (isPt ? "CONFIGURADO/ATIVO" : "CONFIGURED/ACTIVE") 
-            : (isPt ? "Não configurado" : "Not configured");
+            ? t.provider.statusConfigured 
+            : t.provider.statusNotConfigured;
         
         clack.log.step(`${symbol} ${item.label} (${item.value}) — ${statusText}`);
     }

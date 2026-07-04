@@ -3,7 +3,7 @@ import chalk from "chalk";
 import { ApiType, getPresets } from "@multiplexus/shared";
 import { ApiClient } from "../ApiClient";
 import { ensureCredentials } from "../config/LocalConfig";
-import { t } from "../i18n/index";
+import { t, currentLang } from "../i18n/index";
 import { loginGoogle } from "./add_provider_wizard/GoogleLogin";
 import { loginAnthropic } from "./add_provider_wizard/AnthropicLogin";
 import { loginXai } from "./add_provider_wizard/XaiLogin";
@@ -31,15 +31,14 @@ export async function addProviderWizard(apiClient: ApiClient) {
     await ensureCredentials(apiClient, { requireAdmin: true });
     clack.intro(t.menu.addProvider);
 
-    const isPt = t.menu.welcome.includes("Bem-vindo");
-    const lang = isPt ? "pt" : "en";
+    const lang = currentLang;
 
     let presets: any[] = [];
     try {
         presets = await apiClient.getProviderPresets();
     } catch (err: any) {
         presets = getPresets(lang);
-        clack.log.warn("Backend presets unreachable. Loaded presets from local offline cache.");
+        clack.log.warn(t.provider.presetsOffline);
     }
 
     const keys = await apiClient.getProviderKeys().catch(() => [] as any[]);
@@ -78,7 +77,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
     if (selectedPreset.freeTier && selectedPreset.freeTier.length > 0) {
         clack.note(
             selectedPreset.freeTier.map((item: string) => "* " + item).join("\n"),
-            `${selectedPreset.label} Free Tier Offerings`
+            t.provider.freeTierOfferingsTitle.replace("{name}", selectedPreset.label)
         );
     }
 
@@ -223,7 +222,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
             const guide = selectedPreset.guide;
 
             if (guide) {
-                clack.note(`${guide.step1}\n${guide.step2}\n${guide.step3}`, `${providerName} Guide`);
+                clack.note(`${guide.step1}\n${guide.step2}\n${guide.step3}`, t.provider.guideTitle.replace("{name}", providerName));
             } else {
                 const customGuideMsg = t.provider.customGuideText.replace("{name}", providerName);
                 clack.note(customGuideMsg, t.provider.customGuideTitle);

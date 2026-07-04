@@ -43,7 +43,7 @@ export async function generateClientKeyWizard(apiClient: ApiClient) {
     try {
         const newUser = await apiClient.createUser(name as string, roleSelection as string);
         spinner.stop(t.user.success);
-        clack.note(newUser.apiKey, "Client API Key");
+        clack.note(newUser.apiKey, t.user.apiKeyTitle);
     } catch (err: any) {
         spinner.stop(t.user.errorGenerating);
         clack.log.error(`${t.common.error} ${err.message}`);
@@ -66,7 +66,7 @@ export async function listUsersWizard(apiClient: ApiClient) {
         spinner.stop(t.user.loadedSuccess);
 
         const listContent = users
-            .map((u: any) => `- Name: ${u.name}\n  Key:  ${u.apiKey}\n  Role: ${u.role}`)
+            .map((u: any) => t.user.listItemFormat.replace("{name}", u.name).replace("{key}", u.apiKey).replace("{role}", u.role))
             .join("\n\n");
         clack.note(listContent || t.user.listEmpty, t.user.listTitle);
     } catch (err: any) {

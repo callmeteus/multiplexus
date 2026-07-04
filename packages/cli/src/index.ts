@@ -204,7 +204,7 @@ async function main() {
                 return y
                     .command(
                         "add",
-                        "Register a new provider and its keys",
+                        t.yargs.providerAddDesc,
                         () => {},
                         async () => {
                             await addProviderWizard(apiClient);
@@ -212,13 +212,13 @@ async function main() {
                     )
                     .command(
                         "list",
-                        "List all supported and active providers",
+                        t.yargs.providerListDesc,
                         () => {},
                         async () => {
                             await listProvidersWizard(apiClient);
                         }
                     )
-                    .demandCommand(1, "Specify an action: add or list");
+                    .demandCommand(1, t.yargs.providerDemand);
             }
         )
         .command(
@@ -228,7 +228,7 @@ async function main() {
                 return y
                     .command(
                         "add",
-                        "Configure a new model routing rule",
+                        t.yargs.routeAddDesc,
                         () => {},
                         async () => {
                             await addRouteWizard(apiClient);
@@ -236,7 +236,7 @@ async function main() {
                     )
                     .command(
                         "edit",
-                        "Edit an existing model routing rule",
+                        t.yargs.routeEditDesc,
                         () => {},
                         async () => {
                             await editRouteWizard(apiClient);
@@ -244,7 +244,7 @@ async function main() {
                     )
                     .command(
                         "delete",
-                        "Delete an existing model routing rule",
+                        t.yargs.routeDeleteDesc,
                         () => {},
                         async () => {
                             await deleteRouteWizard(apiClient);
@@ -252,13 +252,13 @@ async function main() {
                     )
                     .command(
                         "list",
-                        "List all configured model routing rules",
+                        t.yargs.routeListDesc,
                         () => {},
                         async () => {
                             await listRoutesWizard(apiClient);
                         }
                     )
-                    .demandCommand(1, "Specify an action: add, edit, delete or list");
+                    .demandCommand(1, t.yargs.routeDemand);
             }
         )
         .command(
@@ -268,7 +268,7 @@ async function main() {
                 return y
                     .command(
                         "create",
-                        "Generate a new client API key",
+                        t.yargs.userCreateDesc,
                         () => {},
                         async () => {
                             await generateClientKeyWizard(apiClient);
@@ -276,13 +276,13 @@ async function main() {
                     )
                     .command(
                         "list",
-                        "List all client users and their active keys",
+                        t.yargs.userListDesc,
                         () => {},
                         async () => {
                             await listUsersWizard(apiClient);
                         }
                     )
-                    .demandCommand(1, "Specify an action: create or list");
+                    .demandCommand(1, t.yargs.userDemand);
             }
         )
         .command(
@@ -292,13 +292,13 @@ async function main() {
                 return y
                     .command(
                         "toggle",
-                        "Enable or disable user plugins (e.g. Caveman)",
+                        t.yargs.pluginToggleDesc,
                         () => {},
                         async () => {
                             await managePluginsWizard(apiClient);
                         }
                     )
-                    .demandCommand(1, "Specify an action: toggle");
+                    .demandCommand(1, t.yargs.pluginDemand);
             }
         )
         .command(
