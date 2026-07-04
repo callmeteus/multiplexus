@@ -26,39 +26,7 @@ export const pt: Dictionary = {
         typePrompt: "Selecione o tipo de API:",
         baseUrlPrompt: "Digite a URL Base da API (deixe em branco para o padrão):",
         selectPrompt: "Selecione um provider:",
-        success: "Provider registrado com sucesso!",
-
-        guides: {
-            openai: {
-                step1: "1. Abra https://platform.openai.com/api-keys no seu navegador.",
-                step2: "2. Faça login, adicione créditos se necessário, e clique em 'Create new secret key'.",
-                step3: "3. Copie a chave gerada (ela começa com sk-...)."
-            },
-
-            gemini: {
-                step1: "1. Abra https://aistudio.google.com/ no seu navegador.",
-                step2: "2. Clique em 'Get API key'. O Gemini possui uma VERSÃO GRATUITA excelente!",
-                step3: "3. Selecione ou crie um projeto, gere a chave e copie-a."
-            },
-
-            openrouter: {
-                step1: "1. Vá para https://openrouter.ai/keys no seu navegador.",
-                step2: "2. Crie uma chave. O OpenRouter oferece muitos modelos GRATUITOS!",
-                step3: "3. Copie a chave e prepare-se para colá-la."
-            },
-
-            anthropic: {
-                step1: "1. Vá para https://console.anthropic.com/settings/keys no seu navegador.",
-                step2: "2. Configure o faturamento e clique em 'Create Key'.",
-                step3: "3. Copie a chave (começa com sk-ant-...)."
-            },
-
-            z_ai: {
-                step1: "1. Vá para o painel do z.ai no seu navegador.",
-                step2: "2. Navegue até a seção de chaves API e crie uma nova chave.",
-                step3: "3. Copie a chave."
-            }
-        }
+        success: "Provider registrado com sucesso!"
     },
 
     key: {

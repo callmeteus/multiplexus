@@ -24,39 +24,7 @@ export const en = {
         typePrompt: "Select API Type preset:",
         baseUrlPrompt: "Enter API Base URL (leave empty for default):",
         selectPrompt: "Select a provider:",
-        success: "Provider successfully registered!",
-
-        guides: {
-            openai: {
-                step1: "1. Open https://platform.openai.com/api-keys in your browser.",
-                step2: "2. Sign in, add credits if needed, and click 'Create new secret key'.",
-                step3: "3. Copy the key generated (it starts with sk-...)."
-            },
-
-            gemini: {
-                step1: "1. Open https://aistudio.google.com/ in your browser.",
-                step2: "2. Click 'Get API key'. Gemini has a very generous FREE TIER for development!",
-                step3: "3. Select or create a project, generate the key, and copy it."
-            },
-
-            openrouter: {
-                step1: "1. Go to https://openrouter.ai/keys in your browser.",
-                step2: "2. Create a key. Note that OpenRouter hosts many FREE models!",
-                step3: "3. Copy the key and prepare to paste it."
-            },
-
-            anthropic: {
-                step1: "1. Go to https://console.anthropic.com/settings/keys in your browser.",
-                step2: "2. Set up billing and click 'Create Key'.",
-                step3: "3. Copy the key (starts with sk-ant-...)."
-            },
-
-            z_ai: {
-                step1: "1. Go to z.ai dashboard in your browser.",
-                step2: "2. Navigate to API Keys section and create a new key.",
-                step3: "3. Copy the key."
-            }
-        }
+        success: "Provider successfully registered!"
     },
 
     key: {

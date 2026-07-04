@@ -109,6 +109,10 @@ export class ApiClient {
      * Gets the providers.
      * @returns The providers.
      */
+    async getProviderPresets(): Promise<any[]> {
+        return this.request("/api/providers/presets");
+    }
+
     async getProviders(): Promise<any[]> {
         return this.request("/api/providers");
     }

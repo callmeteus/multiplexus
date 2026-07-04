@@ -1,4 +1,5 @@
 import * as clack from "@clack/prompts";
+import { ApiType, getPresets } from "@multiplexus/shared";
 import { ApiClient } from "../ApiClient";
 import { ensureCredentials } from "../config/LocalConfig";
 import { t } from "../i18n/index";
@@ -10,30 +11,44 @@ export async function addProviderWizard(apiClient: ApiClient) {
     await ensureCredentials(apiClient);
     clack.intro(t.menu.addProvider);
 
-    const providers = await apiClient.getProviders().catch(() => [] as any[]);
+    const isPt = t.menu.welcome.includes("Bem-vindo");
+    const lang = isPt ? "pt" : "en";
 
-    const options = [
-        { value: "openai", label: "OpenAI" },
-        { value: "anthropic", label: "Anthropic" },
-        { value: "gemini", label: "Google Gemini (Generous free tier)" },
-        { value: "openrouter", label: "OpenRouter (Includes free models)" },
-        { value: "z_ai", label: "z.ai" },
-        { value: "custom", label: "Custom OpenAI-compatible provider" }
-    ];
+    let presets: any[] = [];
+    try {
+        presets = await apiClient.getProviderPresets();
+    } catch (err: any) {
+        presets = getPresets(lang);
+        clack.log.warn("Backend presets unreachable. Loaded presets from local offline cache.");
+    }
+
+    const providers = await apiClient.getProviders().catch(() => [] as any[]);
 
     const selection = await clack.select({
         message: t.provider.selectPrompt,
-        options
+        options: presets.map(p => ({ value: p.value, label: p.label }))
     });
 
     if (clack.isCancel(selection)) {
         return;
     }
 
-    let providerId: number = 0;
-    let providerName = selection as string;
+    const presetName = selection as string;
+    const selectedPreset = presets.find(p => p.value === presetName)!;
+    let providerName = selectedPreset.label;
+    let providerId = 0;
+    let apiType = selectedPreset.apiType;
+    let baseUrl = selectedPreset.baseUrl;
 
-    if (selection === "custom") {
+    // Show free tier benefits if available
+    if (selectedPreset.freeTier && selectedPreset.freeTier.length > 0) {
+        clack.note(
+            selectedPreset.freeTier.map((item: string) => "* " + item).join("\n"),
+            `${selectedPreset.label} Free Tier Offerings`
+        );
+    }
+
+    if (presetName === "custom") {
         const name = await clack.text({
             message: t.provider.namePrompt,
             placeholder: "groq",
@@ -48,7 +63,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
             return;
         }
 
-        const baseUrl = await clack.text({
+        const inputUrl = await clack.text({
             message: t.provider.baseUrlPrompt,
             placeholder: "https://api.groq.com/openai/v1",
             validate(value) {
@@ -58,51 +73,50 @@ export async function addProviderWizard(apiClient: ApiClient) {
             }
         });
 
-        if (clack.isCancel(baseUrl)) {
+        if (clack.isCancel(inputUrl)) {
             return;
         }
 
-        const spinner = clack.spinner();
-        spinner.start("Registering provider...");
+        const spinnerReg = clack.spinner();
+        spinnerReg.start("Registering provider...");
         try {
-            const res = await apiClient.createProvider(name as string, "openai", baseUrl as string);
+            const res = await apiClient.createProvider(name as string, ApiType.OPENAI, inputUrl as string);
             providerId = res.id;
             providerName = res.name;
-            spinner.stop(t.provider.success);
+            apiType = ApiType.OPENAI;
+            spinnerReg.stop(t.provider.success);
         } catch (err: any) {
-            spinner.stop("Error registering provider");
-            clack.log.error(`${t.common.error} ${err.message}`);
+            spinnerReg.stop("Error registering provider");
+            clack.log.error(`${t.common.error} dots`.replace("\dots", err.message));
             return;
         }
     } else {
-        const existing = providers.find((p: any) => p.name === selection);
+        const existing = providers.find((p: any) => p.name === presetName);
         if (existing) {
             providerId = existing.id;
         } else {
-            const spinner = clack.spinner();
-            spinner.start("Registering default provider...");
-            try {
-                let apiType = "openai";
-                let baseUrl = "";
-                if (selection === "anthropic") {
-                    apiType = "anthropic";
-                } else
-                if (selection === "gemini") {
-                    baseUrl = "https://generativelanguage.googleapis.com/v1beta/openai/v1";
-                } else
-                if (selection === "openrouter") {
-                    baseUrl = "https://openrouter.ai/api/v1";
-                } else
-                if (selection === "z_ai") {
-                    baseUrl = "https://api.z.ai/v1";
-                }
+            // Handle cloudflare dynamic account ID URL generation
+            if (presetName === "cloudflare") {
+                const accountId = await clack.text({
+                    message: "Enter your Cloudflare Account ID:",
+                    placeholder: "e.g. 1a2b3c4d5e6f...",
+                    validate(val) {
+                        if (!val) return "Account ID is required";
+                    }
+                });
+                if (clack.isCancel(accountId)) return;
+                baseUrl = `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1`;
+            }
 
-                const res = await apiClient.createProvider(selection as string, apiType, baseUrl || undefined);
+            const spinnerReg = clack.spinner();
+            spinnerReg.start("Registering default provider...");
+            try {
+                const res = await apiClient.createProvider(presetName, apiType, baseUrl || undefined);
                 providerId = res.id;
-                spinner.stop(t.provider.success);
+                spinnerReg.stop(t.provider.success);
             } catch (err: any) {
-                spinner.stop("Error registering provider");
-                clack.log.error(`${t.common.error} ${err.message}`);
+                spinnerReg.stop("Error registering provider");
+                clack.log.error(`${t.common.error} dots`.replace("\dots", err.message));
                 return;
             }
         }
@@ -126,20 +140,16 @@ export async function addProviderWizard(apiClient: ApiClient) {
     if (authMethod === "oauth") {
         clack.log.info("Starting browser OAuth flow...");
         try {
-            if (providerName === "gemini") {
+            if (presetName === "gemini") {
                 key = await loginGoogle();
             } else
-            if (providerName === "anthropic") {
+            if (presetName === "anthropic") {
                 key = await loginAnthropic();
-            } else
-            if (providerName === "openai" || providerName === "openrouter" || providerName === "z_ai") {
-                // Generically support OAuth/Simulation for others via xAI
-                key = await loginXai();
             } else {
                 key = await loginXai();
             }
         } catch (err: any) {
-            clack.log.error(`OAuth connection failed: ${err.message}`);
+            clack.log.error(`OAuth connection failed: dots`.replace("\dots", err.message));
             return;
         }
     } else {
@@ -157,10 +167,9 @@ export async function addProviderWizard(apiClient: ApiClient) {
         }
 
         if (mode === "guided") {
-            const guides: Record<string, { step1: string; step2: string; step3: string } | undefined> = t.provider.guides;
-            const guide = guides[providerName];
+            const guide = selectedPreset.guide;
             if (guide) {
-                clack.note(`${guide.step1}\n${guide.step2}\n${guide.step3}`, `${providerName} Guide`);
+                clack.note(`${guide.step1}\ndots\n${guide.step3}`.replace("\dots", guide.step2), `${providerName} Guide`);
             } else {
                 clack.note(`Follow setup instructions for your custom provider '${providerName}' to generate a valid API key.`, "Custom Guide");
             }
@@ -214,8 +223,8 @@ export async function addProviderWizard(apiClient: ApiClient) {
         return;
     }
 
-    const spinner = clack.spinner();
-    spinner.start("Adding API Key to database...");
+    const spinnerKey = clack.spinner();
+    spinnerKey.start("Adding API Key to database...");
     try {
         await apiClient.addProviderKey(
             providerId,
@@ -223,9 +232,9 @@ export async function addProviderWizard(apiClient: ApiClient) {
             weightInput ? Number(weightInput) : 1,
             (desc as string) || undefined
         );
-        spinner.stop(t.key.success);
+        spinnerKey.stop(t.key.success);
     } catch (err: any) {
-        spinner.stop("Error adding key");
+        spinnerKey.stop("Error adding key");
         clack.log.error(`${t.common.error} ${err.message}`);
     }
 }
