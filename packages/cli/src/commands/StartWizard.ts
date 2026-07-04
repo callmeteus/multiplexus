@@ -6,6 +6,7 @@ import { ApiClient } from "../ApiClient";
 import { t } from "../i18n/index";
 import { syncAdminCredentials } from "../config/LocalConfig";
 import { resolveBackend } from "../config/BackendResolution";
+import { checkServerReady } from "../utils/ProcessUtils";
 import {
     clearServerPid,
     findListeningPid,
@@ -136,30 +137,7 @@ function spawnBackendProcess(backendDir: string, tsxCli: string, logFile: string
     });
 }
 
-/**
- * Checks whether the multiplexus backend health endpoint is responding.
- * @param url The backend base URL.
- * @returns True when the server reports status ok.
- */
-async function checkServerReady(url: string): Promise<boolean> {
-    try {
-        const controller = new AbortController();
-        const id = setTimeout(() => controller.abort(), 1000);
 
-        // eslint-disable-next-line no-undef
-        const res = await fetch(`${url}/health`, { signal: controller.signal });
-        clearTimeout(id);
-
-        if (res.ok) {
-            const data = await res.json() as { status?: string };
-            return data.status === "ok";
-        }
-    } catch (_) {
-        // Ignore error
-    }
-
-    return false;
-}
 
 /**
  * Waits for the server to be ready.

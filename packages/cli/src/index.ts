@@ -11,29 +11,9 @@ import { helpWizard } from "./commands/HelpWizard";
 import { startBackendWizard, stopBackendWizard } from "./commands/StartWizard";
 import { managePluginsWizard } from "./commands/PluginWizard";
 import { listProvidersWizard } from "./commands/ListProvidersWizard";
+import { checkServerReady } from "./utils/ProcessUtils";
 
 const apiClient = new ApiClient();
-
-/**
- * Checks if the local multiplexus backend router server is currently running.
- * @returns A promise that resolves to true if running, or false otherwise.
- */
-async function isBackendRunning(): Promise<boolean> {
-    try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 200);
-        const res = await fetch("http://localhost:3000/health", { signal: controller.signal });
-        clearTimeout(timeoutId);
-
-        if (res.ok) {
-            const data = await res.json() as { status?: string };
-            return data.status === "ok";
-        }
-    } catch (_) {
-        // Ignore error and assume offline
-    }
-    return false;
-}
 
 /**
  * Runs the interactive menu.
@@ -41,7 +21,7 @@ async function isBackendRunning(): Promise<boolean> {
 async function runInteractiveMenu() {
     clack.intro(t.menu.welcome);
 
-    const running = await isBackendRunning();
+    const running = await checkServerReady(undefined, 200);
 
     const options = [];
     if (running) {
