@@ -46,3 +46,18 @@ export async function checkServerReady(url: string = "http://localhost:3000", ti
 
     return false;
 }
+
+/**
+ * Checks if the prompt result is a cancel signal (Ctrl+C).
+ * If it is, cleanly terminates the CLI process immediately.
+ * Call this after every clack prompt to ensure Ctrl+C always exits immediately.
+ * @param result The prompt result from any Clack prompt.
+ */
+export function handleCancel(result: unknown): void {
+    // All clack cancel signals are represented as a specific symbol internally.
+    // typeof === "symbol" is the reliable way to detect them without importing clack here.
+    if (typeof result === "symbol") {
+        process.stdout.write("\n");
+        process.exit(0);
+    }
+}

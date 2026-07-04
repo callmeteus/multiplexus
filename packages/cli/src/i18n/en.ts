@@ -8,16 +8,25 @@ export const en = {
     menu: {
         welcome: "Welcome to multiplexus LLM Router!",
         selectAction: "What would you like to do?",
-        addProvider: "Add Provider",
-        addProviderKey: "Add API Key to Provider",
-        addRoute: "Configure Model Route",
-        addUser: "Generate Client API Key",
-        listUsers: "List Client API Keys",
-        managePlugins: "Manage Client Plugins",
-        helpGuide: "Help & Setup Guide",
+        serverCategory: "Server Router Management",
+        providerCategory: "Provider Settings",
+        routeCategory: "Model Route Settings",
+        clientCategory: "Client Users Settings",
+        systemCategory: "System Settings",
         startServer: "Start Local Router Server",
         stopServer: "Stop Local Router Server",
-        exit: "Exit"
+        addProvider: "Add Provider Preset & Credentials",
+        listProviders: "List Active Providers",
+        addRoute: "Add Routing Target",
+        editRoute: "Edit Model Route",
+        deleteRoute: "Delete Model Route",
+        listRoutes: "List Configured Routes",
+        addUser: "Create Client API Key",
+        listUsers: "List Client API Keys",
+        managePlugins: "Manage Server Plugins",
+        helpGuide: "View Provider Setup Guide",
+        exit: "Exit",
+        back: "Back to Main Menu"
     },
 
     provider: {
@@ -73,7 +82,23 @@ export const en = {
         routerModelRequired: "Router model name is required",
         providerModelRequired: "Provider model name is required",
         priorityMustBeNumber: "Priority must be a number",
-        weightMustBeNumber: "Weight must be a number"
+        weightMustBeNumber: "Weight must be a number",
+        editSelect: "Select the model route to edit:",
+        editPrompt: "What would you like to update?",
+        editAddTarget: "Add target model to route",
+        editProviderModel: "Provider Model Name",
+        editPriority: "Routing Priority",
+        editWeight: "Routing Weight",
+        editStatus: "Is Active Status",
+        editSuccess: "Model route updated successfully!",
+        deleteSelect: "Select the model route to delete:",
+        deleteConfirm: "Are you sure you want to delete this route?",
+        deleteSuccess: "Model route successfully deleted!",
+        listEmpty: "No model routes configured yet.",
+        listTitle: "Configured Model Routes:",
+        statusActive: "Active",
+        statusInactive: "Inactive",
+        modelFilterPrompt: "Filter models by name or ID"
     },
 
     user: {

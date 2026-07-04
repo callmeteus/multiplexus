@@ -239,6 +239,31 @@ export class ApiClient {
     }
 
     /**
+     * Updates an existing model route by its ID.
+     * @param id The ID of the model route.
+     * @param updates The fields to update.
+     * @returns The updated model route.
+     */
+    async updateModelRoute(id: number, updates: {
+        routerModel?: string;
+        providerModel?: string;
+        priority?: number;
+        weight?: number;
+        isActive?: boolean;
+    }): Promise<any> {
+        return this.request(`/api/model/routes/${id}`, "PATCH", updates);
+    }
+
+    /**
+     * Deletes a model route by its ID.
+     * @param id The ID of the model route.
+     * @returns The deletion status.
+     */
+    async deleteModelRoute(id: number): Promise<any> {
+        return this.request(`/api/model/routes/${id}`, "DELETE");
+    }
+
+    /**
      * Gets the users.
      * @returns The users.
      */
@@ -283,5 +308,24 @@ export class ApiClient {
      */
     async toggleUserPlugin(userId: number, pluginName: string, isEnabled: boolean): Promise<any> {
         return this.request(`/api/users/${userId}/plugins`, "POST", { pluginName, isEnabled });
+    }
+
+    /**
+     * Discovers available models for a given provider via the backend proxy.
+     * Returns null if the provider does not support model discovery.
+     * @param providerId The ID of the provider.
+     * @returns Array of discovered models or null.
+     */
+    async getProviderModels(providerId: number): Promise<any[] | null> {
+        try {
+            const data = await this.request(`/api/providers/${providerId}/models`);
+            return data.models ?? null;
+        } catch (err: any) {
+            // 501 means the provider doesn't support model listing — not an error
+            if (err.message?.includes("501")) {
+                return null;
+            }
+            throw err;
+        }
     }
 }

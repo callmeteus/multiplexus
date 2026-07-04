@@ -5,3 +5,4 @@ dist/
 initial-credentials.data
 .env
 .DS_Store
+*-config.json
