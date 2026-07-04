@@ -160,7 +160,7 @@ export const pt: Dictionary = {
     },
 
     help: {
-        title: "multiplexus Help — Guia de Setup de Providers",
+        title: "multiplexus Help - Guia de Setup de Providers",
         workflowTitle: "Fluxo de Uso",
         workflow: [
             "1. Registre um provider e adicione sua chave de API.",

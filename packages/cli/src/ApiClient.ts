@@ -321,7 +321,7 @@ export class ApiClient {
             const data = await this.request(`/api/providers/${providerId}/models`);
             return data.models ?? null;
         } catch (err: any) {
-            // 501 means the provider doesn't support model listing — not an error
+            // 501 means the provider doesn't support model listing - not an error
             if (err.message?.includes("501")) {
                 return null;
             }

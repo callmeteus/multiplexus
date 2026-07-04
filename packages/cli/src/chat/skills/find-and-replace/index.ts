@@ -7,7 +7,7 @@ import { Skill, SkillContext, ToolResult } from "../../Types";
  */
 export const findAndReplaceSkill: Skill = {
     name: "find_and_replace",
-    description: "Edit existing files — replace one unique old_string with new_string (preferred over write_file)",
+    description: "Edit existing files - replace one unique old_string with new_string (preferred over write_file)",
     example: '{"name":"find_and_replace","arguments":{"path":"packages/cli/src/index.ts","old_string":"const x = 1;","new_string":"const x = 2;"}}',
 
     execute(args: Record<string, string>, ctx: SkillContext): ToolResult {
@@ -27,7 +27,7 @@ export const findAndReplaceSkill: Skill = {
 
             const occurrences = content.split(oldString).length - 1;
             if (occurrences > 1) {
-                throw new Error("old_string is not unique — include more surrounding context");
+                throw new Error("old_string is not unique - include more surrounding context");
             }
 
             fs.writeFileSync(target, content.replace(oldString, newString), "utf-8");

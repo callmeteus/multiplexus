@@ -15,7 +15,7 @@ function assertRealFileContent(content: string): void {
     }
 
     if (PLACEHOLDER_RE.test(content)) {
-        throw new Error("placeholder content rejected — use find_and_replace with exact old_string from read_file");
+        throw new Error("placeholder content rejected - use find_and_replace with exact old_string from read_file");
     }
 }
 
@@ -24,7 +24,7 @@ function assertRealFileContent(content: string): void {
  */
 export const writeFileSkill: Skill = {
     name: "write_file",
-    description: "Create a new file only — never use on existing files (use find_and_replace instead)",
+    description: "Create a new file only - never use on existing files (use find_and_replace instead)",
     example: '{"name":"write_file","arguments":{"path":"...","content":"..."}}',
     requiresApproval: true,
 
@@ -34,7 +34,7 @@ export const writeFileSkill: Skill = {
             const target = resolveSkillPath(ctx, args.path);
 
             if (fs.existsSync(target)) {
-                throw new Error("file already exists — use find_and_replace after read_file");
+                throw new Error("file already exists - use find_and_replace after read_file");
             }
 
             assertRealFileContent(content);

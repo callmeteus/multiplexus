@@ -158,7 +158,7 @@ export const en = {
     },
 
     help: {
-        title: "multiplexus Help — Provider Setup Guide",
+        title: "multiplexus Help - Provider Setup Guide",
         workflowTitle: "Usage Workflow",
 
         workflow: [

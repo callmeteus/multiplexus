@@ -9,7 +9,7 @@ import {
 /**
  * Gemini models that are free on the Google AI (Gemini API) free tier.
  * Gemma models are open-weight and free to use. The Gemini API free tier
- * also covers flash-lite models but those are rate-limited — marking them
+ * also covers flash-lite models but those are rate-limited - marking them
  * free would be misleading, so only open-weight Gemma models are marked here.
  * Check https://ai.google.dev/pricing for current rates.
  */

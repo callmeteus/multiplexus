@@ -54,7 +54,7 @@ export async function listProvidersWizard(apiClient: ApiClient) {
             ? t.provider.statusConfigured 
             : t.provider.statusNotConfigured;
         
-        clack.log.step(`${symbol} ${item.label} (${item.value}) — ${statusText}`);
+        clack.log.step(`${symbol} ${item.label} (${item.value}) - ${statusText}`);
     }
 
     clack.outro("");

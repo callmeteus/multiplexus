@@ -21,7 +21,7 @@
 
 ## ✨ Key Features
 
-*   **🔌 OpenAI-Compatible API:** Zero configuration changes needed in your favorite development tools—just point the base URL to your multiplexus instance.
+*   **🔌 OpenAI-Compatible API:** Zero configuration changes needed in your favorite development tools-just point the base URL to your multiplexus instance.
 *   **⚖️ Weight-Based Load Balancing:** Register multiple keys for the same provider and assign them weights to distribute your traffic and optimize rate limits.
 *   **🛡️ Robust Fallback & Failover:** Group routes by priority. If a primary provider fails, is rate-limited (429), or faces downtime, multiplexus tries alternative keys, fallback models, or secondary providers sequentially.
 *   **🔌 Client-Key Plugin System:** Enable and toggle specialized modifiers and system prompts **per client key**.

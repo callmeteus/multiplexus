@@ -3,7 +3,7 @@ import { DiscoveredModel, ProviderHandler, sortModels } from "../ProviderHandler
 /**
  * Hardcoded model list for Anthropic.
  * Anthropic does not expose a /v1/models listing endpoint, so the list is maintained here.
- * Pricing is not hardcoded — check https://www.anthropic.com/pricing for current rates.
+ * Pricing is not hardcoded - check https://www.anthropic.com/pricing for current rates.
  * No Anthropic models are free via the API.
  */
 const MODELS: DiscoveredModel[] = sortModels([

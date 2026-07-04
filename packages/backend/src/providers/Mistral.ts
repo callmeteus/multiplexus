@@ -8,7 +8,7 @@ import {
 
 /**
  * Mistral models that are free on La Plateforme (open-weight, no API cost).
- * These are the only models where isFree is hardcoded — paid model pricing
+ * These are the only models where isFree is hardcoded - paid model pricing
  * is not hardcoded since it changes. Check https://mistral.ai/technology/#pricing
  */
 const FREE_PATTERNS: RegExp[] = [

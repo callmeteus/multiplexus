@@ -31,7 +31,7 @@ export interface ProviderHandler {
 
 /**
  * Fetches a standard OpenAI-compatible /v1/models endpoint with Bearer auth.
- * Returns models with null pricing — handlers apply their own free markers on top.
+ * Returns models with null pricing - handlers apply their own free markers on top.
  * @param baseUrl The provider base URL (without trailing slash).
  * @param apiKey The API key.
  */
@@ -67,7 +67,7 @@ export async function fetchOpenAICompatibleList(baseUrl: string, apiKey: string)
  * Marks models as free based on a list of RegExp patterns tested against model IDs.
  * Does not touch pricing of models that don't match any pattern.
  * @param models The model list to process.
- * @param freePatterns RegExp patterns — any matching model is marked as free with price 0.
+ * @param freePatterns RegExp patterns - any matching model is marked as free with price 0.
  */
 export function markFreeModels(models: DiscoveredModel[], freePatterns: RegExp[]): DiscoveredModel[] {
     return models.map((m) => {
@@ -81,7 +81,7 @@ export function markFreeModels(models: DiscoveredModel[], freePatterns: RegExp[]
 
 /**
  * Sorts models so free ones appear first, then by insertion order.
- * @param models Models to sort (not mutated — returns a new array).
+ * @param models Models to sort (not mutated - returns a new array).
  */
 export function sortModels(models: DiscoveredModel[]): DiscoveredModel[] {
     return [...models].sort((a, b) => {

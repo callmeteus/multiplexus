@@ -9,10 +9,10 @@ import {
 /**
  * Z.ai models that are free on their platform.
  * GLM-4-Flash is documented as free on Z.ai (https://z.ai).
- * Paid model pricing is not hardcoded — check the Z.ai pricing page for current rates.
+ * Paid model pricing is not hardcoded - check the Z.ai pricing page for current rates.
  */
 const FREE_PATTERNS: RegExp[] = [
-    /^glm-4-flash$/  // GLM-4-Flash — explicitly documented as free
+    /^glm-4-flash$/  // GLM-4-Flash - explicitly documented as free
 ];
 
 /**

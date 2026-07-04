@@ -105,14 +105,14 @@ export function buildChatSystemPrompt(ctx: SkillContext, lang: string): string {
 
     const usage = isPt
         ? [
-            "Para usar ferramentas, responda SOMENTE com blocos <tool_call> JSON — sem texto misturado:",
+            "Para usar ferramentas, responda SOMENTE com blocos <tool_call> JSON - sem texto misturado:",
             ...examples,
             "O usuário não vê os blocos <tool_call>; ele vê apenas o status da ferramenta.",
             "Após <tool_result>, continue até concluir.",
             "Quando terminar, responda em texto normal sem <tool_call>."
         ]
         : [
-            "To use tools, respond ONLY with <tool_call> JSON blocks — no mixed prose:",
+            "To use tools, respond ONLY with <tool_call> JSON blocks - no mixed prose:",
             ...examples,
             "The user does not see <tool_call> blocks; they only see tool status.",
             "After <tool_result>, continue until done.",

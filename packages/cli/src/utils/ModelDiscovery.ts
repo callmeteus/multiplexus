@@ -113,7 +113,7 @@ export async function promptProviderModel(
         return value as string;
     }
 
-    // Filter step — let the user narrow down the list before selecting
+    // Filter step - let the user narrow down the list before selecting
     const filterInput = await clack.text({
         message: `${t.route.modelFilterPrompt} (${chalk.gray(t.route.filterShowAll)})`,
         placeholder: "e.g. gpt, claude, gemini...",
