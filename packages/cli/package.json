@@ -6,7 +6,7 @@
     "main": "dist/index.js",
     "bin": {
         "multiplexus": "./dist/index.js",
-        "mp": "./dist/index.js"
+        "mpx": "./dist/index.js"
     },
     "scripts": {
         "build": "tsc",

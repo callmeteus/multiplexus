@@ -27,7 +27,7 @@
 *   **🔌 Client-Key Plugin System:** Enable and toggle specialized modifiers and system prompts **per client key**.
 *   **💀 Caveman Mode integration:** Toggle token compression style globally or per client-key for up to **75% savings in output tokens**.
 *   **💻 Interactive CLI Wizard:** Entirely manageable via an interactive terminal interface supporting both English and Portuguese (i18n).
-*   **⚡ Running Local Server with One Command:** Launch the backend server in background directly via `mp start`.
+*   **⚡ Running Local Server with One Command:** Launch the backend server in background directly via `mpx start`.
 *   **🪵 Enterprise logging:** JSON logs powered by Winston with automatic daily rotate file capabilities.
 
 ---
@@ -40,7 +40,7 @@ multiplexus supports a modular **Plugin System** configurable **per client API K
 Inspired by the [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) project, Caveman Mode optimizes your LLM interactions by drastically reducing token output usage (usually by **65% to 75%**). It forces models to speak in compressed, "telegraphic" shorthand sentences, stripping conversational filler and pleasantries while keeping code and commands 100% accurate.
 
 To enable Caveman Mode for any client key:
-1. Open the multiplexus CLI wizard: `npx mp`
+1. Open the multiplexus CLI wizard: `npx mpx`
 2. Select **Manage Client Plugins**.
 3. Select your target client key, choose `caveman`, and toggle it to `ENABLED`.
 4. *All subsequent API requests using that client key will now automatically speak in compressed Caveman format!*
@@ -59,14 +59,14 @@ npm install
 ### 2. Launch multiplexus
 Start the local router server in the background and configure the CLI client automatically:
 ```bash
-npx mp start
+npx mpx start
 ```
 *This command launches the backend server, waits for the health check, reads generated admin credentials, and saves them locally.*
 
 ### 3. Add a Provider and API Key
 Run the interactive wizard to set up your first provider:
 ```bash
-npx mp
+npx mpx
 ```
 Choose **Add Provider**, select a preset (e.g., Gemini, OpenAI, OpenRouter) or Custom, and follow the step-by-step key generator guide.
 

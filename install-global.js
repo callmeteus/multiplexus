@@ -36,8 +36,8 @@ try {
     execSync("npm link", { stdio: "inherit", cwd: cliDir, shell: isWindows });
 
     console.log("\n=== Success! ===");
-    console.log("multiplexus CLI ('mp' or 'multiplexus') has been linked globally.");
-    console.log("You can now open a new terminal window and run: mp");
+    console.log("multiplexus CLI ('mpx' or 'multiplexus') has been linked globally.");
+    console.log("You can now open a new terminal window and run: mpx");
 } catch (error) {
     console.error("\nInstallation failed:", error.message);
     process.exit(1);
