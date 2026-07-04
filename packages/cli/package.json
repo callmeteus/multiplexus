@@ -1,0 +1,27 @@
+{
+    "name": "@multiplexus/cli",
+    "version": "1.0.0",
+    "description": "CLI for multiplexus LLM router",
+    "private": true,
+    "type": "module",
+    "main": "dist/index.js",
+    "bin": {
+        "multiplexus": "./dist/index.js",
+        "mp": "./dist/index.js"
+    },
+    "scripts": {
+        "build": "tsc",
+        "start": "tsx src/index.ts"
+    },
+    "dependencies": {
+        "@multiplexus/shared": "*",
+        "@clack/prompts": "^0.7.0",
+        "yargs": "^18.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.14.9",
+        "@types/yargs": "^17.0.35",
+        "tsx": "^4.16.0",
+        "typescript": "^5.5.2"
+    }
+}

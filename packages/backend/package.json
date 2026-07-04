@@ -1,0 +1,33 @@
+{
+    "name": "@multiplexus/backend",
+    "version": "1.0.0",
+    "description": "Backend for multiplexus LLM router",
+    "private": true,
+    "type": "module",
+    "main": "dist/index.js",
+    "scripts": {
+        "build": "tsc",
+        "start": "node dist/index.js",
+        "dev": "tsx watch src/index.ts",
+        "test": "vitest run"
+    },
+    "dependencies": {
+        "@multiplexus/shared": "*",
+        "@fastify/cors": "^9.0.1",
+        "fastify": "^4.28.1",
+        "reflect-metadata": "^0.2.2",
+        "sequelize": "^6.37.3",
+        "sequelize-typescript": "^2.1.6",
+        "sqlite3": "^5.1.7",
+        "tsx": "^4.23.0",
+        "winston": "^3.19.0",
+        "winston-daily-rotate-file": "^5.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^20.14.9",
+        "@types/validator": "^13.12.0",
+        "ts-node-dev": "^2.0.0",
+        "typescript": "^5.5.2",
+        "vitest": "^4.1.9"
+    }
+}

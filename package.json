@@ -1,0 +1,17 @@
+{
+    "name": "multiplexus",
+    "version": "1.0.0",
+    "description": "Simple OpenAI-compatible LLM router with multi-key support",
+    "private": true,
+    "workspaces": [
+        "packages/backend",
+        "packages/cli",
+        "packages/shared"
+    ],
+    "scripts": {
+        "dev:backend": "npm run dev -w packages/backend",
+        "start:backend": "npm run start -w packages/backend",
+        "build:backend": "npm run build -w packages/backend",
+        "start:cli": "npm run start -w packages/cli"
+    }
+}
