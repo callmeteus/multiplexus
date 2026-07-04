@@ -3,9 +3,9 @@ import * as fs from "fs";
 import * as path from "path";
 
 /**
- * The PID file path.
+ * The PID filename.
  */
-const PID_FILE = path.join(process.cwd(), "logs", "multiplexus-backend.pid");
+const PID_FILENAME = "multiplexus-backend.pid";
 
 /**
  * Gets the PID file path.
@@ -13,7 +13,7 @@ const PID_FILE = path.join(process.cwd(), "logs", "multiplexus-backend.pid");
  * @returns The PID file path.
  */
 function getPidFilePath(backendDir: string): string {
-    return path.join(backendDir, PID_FILE);
+    return path.join(backendDir, "logs", PID_FILENAME);
 }
 
 /**
@@ -68,6 +68,38 @@ export function isProcessAlive(pid: number): boolean {
         return true;
     } catch (_) {
         return false;
+    }
+}
+
+/**
+ * Finds the listening PID.
+ * @param port The port.
+ * @returns The listening PID.
+ */
+export function findListeningPid(port: number): number | null {
+    try {
+        if (process.platform === "win32") {
+            const output = execSync(`netstat -ano | findstr ":${port}" | findstr "LISTENING"`, {
+                encoding: "utf-8"
+            });
+
+            for (const line of output.trim().split(/\r?\n/)) {
+                const parts = line.trim().split(/\s+/);
+                const pid = Number(parts[parts.length - 1]);
+
+                if (Number.isInteger(pid) && pid > 0) {
+                    return pid;
+                }
+            }
+
+            return null;
+        }
+
+        const output = execSync(`lsof -ti tcp:${port} -sTCP:LISTEN`, { encoding: "utf-8" });
+        const pid = Number(output.trim().split(/\r?\n/)[0]);
+        return Number.isInteger(pid) && pid > 0 ? pid : null;
+    } catch (_) {
+        return null;
     }
 }
 

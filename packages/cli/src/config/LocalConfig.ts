@@ -11,6 +11,10 @@ export interface LocalConfig {
 
 const configPath = path.join(process.cwd(), ".multiplexus-cli-config.json");
 
+/**
+ * Loads the local config.
+ * @returns The local config.
+ */
 export function loadLocalConfig(): LocalConfig | null {
     if (fs.existsSync(configPath)) {
         try {
@@ -22,10 +26,18 @@ export function loadLocalConfig(): LocalConfig | null {
     return null;
 }
 
+/**
+ * Saves the local config.
+ * @param config The local config.
+ */
 export function saveLocalConfig(config: LocalConfig) {
     fs.writeFileSync(configPath, JSON.stringify(config, null, 4), "utf-8");
 }
 
+/**
+ * Ensures the credentials.
+ * @param apiClient The API client.
+ */
 export async function ensureCredentials(apiClient: ApiClient) {
     if (apiClient.hasCredentials()) {
         return;

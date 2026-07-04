@@ -13,54 +13,55 @@ import { managePluginsWizard } from "./commands/PluginWizard";
 
 const apiClient = new ApiClient();
 
+/**
+ * Runs the interactive menu.
+ */
 async function runInteractiveMenu() {
     clack.intro(t.menu.welcome);
 
-    while (true) {
-        const action = await clack.select({
-            message: t.menu.selectAction,
-            options: [
-                { value: "start", label: t.menu.startServer },
-                { value: "stop", label: t.menu.stopServer },
-                { value: "provider", label: t.menu.addProvider },
-                { value: "route", label: t.menu.addRoute },
-                { value: "client", label: t.menu.addUser },
-                { value: "list", label: t.menu.listUsers },
-                { value: "plugin", label: t.menu.managePlugins },
-                { value: "help", label: t.menu.helpGuide },
-                { value: "exit", label: t.menu.exit }
-            ]
-        });
+    const action = await clack.select({
+        message: t.menu.selectAction,
+        options: [
+            { value: "start", label: t.menu.startServer },
+            { value: "stop", label: t.menu.stopServer },
+            { value: "provider", label: t.menu.addProvider },
+            { value: "route", label: t.menu.addRoute },
+            { value: "client", label: t.menu.addUser },
+            { value: "list", label: t.menu.listUsers },
+            { value: "plugin", label: t.menu.managePlugins },
+            { value: "help", label: t.menu.helpGuide },
+            { value: "exit", label: t.menu.exit }
+        ]
+    });
 
-        if (clack.isCancel(action) || action === "exit") {
-            clack.outro(t.common.bye);
-            break;
-        }
+    if (clack.isCancel(action) || action === "exit") {
+        clack.outro(t.common.bye);
+        return;
+    }
 
-        if (action === "start") {
-            await startBackendWizard(apiClient);
-        } else
-        if (action === "stop") {
-            await stopBackendWizard();
-        } else
-        if (action === "provider") {
-            await addProviderWizard(apiClient);
-        } else
-        if (action === "route") {
-            await addRouteWizard(apiClient);
-        } else
-        if (action === "client") {
-            await generateClientKeyWizard(apiClient);
-        } else
-        if (action === "list") {
-            await listUsersWizard(apiClient);
-        } else
-        if (action === "plugin") {
-            await managePluginsWizard(apiClient);
-        } else
-        if (action === "help") {
-            await helpWizard();
-        }
+    if (action === "start") {
+        await startBackendWizard(apiClient);
+    } else
+    if (action === "stop") {
+        await stopBackendWizard();
+    } else
+    if (action === "provider") {
+        await addProviderWizard(apiClient);
+    } else
+    if (action === "route") {
+        await addRouteWizard(apiClient);
+    } else
+    if (action === "client") {
+        await generateClientKeyWizard(apiClient);
+    } else
+    if (action === "list") {
+        await listUsersWizard(apiClient);
+    } else
+    if (action === "plugin") {
+        await managePluginsWizard(apiClient);
+    } else
+    if (action === "help") {
+        await helpWizard();
     }
 }
 

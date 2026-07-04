@@ -160,7 +160,7 @@ export const pt: Dictionary = {
 
     yargs: {
         startDesc: "Inicia o servidor roteador multiplexus local em segundo plano",
-        stopDesc: "Para o servidor roteador multiplexus iniciado com mpx start",
+        stopDesc: "Para o servidor roteador multiplexus na porta 3000",
         providerDesc: "Gerenciar providers",
         providerActionDesc: "Ação: add",
         routeDesc: "Gerenciar rotas de modelos",

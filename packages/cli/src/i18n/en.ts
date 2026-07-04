@@ -161,7 +161,7 @@ export const en = {
 
     yargs: {
         startDesc: "Start the local multiplexus router server in background",
-        stopDesc: "Stop the local multiplexus router server started by mpx start",
+        stopDesc: "Stop the local multiplexus router server on port 3000",
         providerDesc: "Manage providers",
         providerActionDesc: "Action: add",
         routeDesc: "Manage model routes",

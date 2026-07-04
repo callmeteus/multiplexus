@@ -7,6 +7,7 @@ import { t } from "../i18n/index";
 import { saveLocalConfig } from "../config/LocalConfig";
 import {
     clearServerPid,
+    findListeningPid,
     isProcessAlive,
     killServerProcess,
     loadServerPid,
@@ -90,6 +91,29 @@ function resolveTsxCli(projectRoot: string): string | null {
     }
 
     return null;
+}
+
+function spawnBackendProcess(backendDir: string, tsxCli: string, logFile: string) {
+    const isWindows = process.platform === "win32";
+
+    if (isWindows) {
+        // detached node.exe on Windows opens a blank console window; start /B avoids that
+        const command = `start /B "" "${process.execPath}" "${tsxCli}" src/index.ts 1>>"${logFile}" 2>&1`;
+        return spawn("cmd.exe", ["/d", "/s", "/c", command], {
+            cwd: backendDir,
+            detached: true,
+            stdio: "ignore",
+            windowsHide: true
+        });
+    }
+
+    const logFd = fs.openSync(logFile, "a");
+    return spawn(process.execPath, [tsxCli, "src/index.ts"], {
+        cwd: backendDir,
+        detached: true,
+        stdio: ["ignore", logFd, logFd],
+        windowsHide: true
+    });
 }
 
 async function checkServerReady(url: string): Promise<boolean> {
@@ -200,9 +224,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
     const spinner = clack.spinner();
     spinner.start(t.start.starting);
 
-    const isWindows = process.platform === "win32";
     const logFile = path.join(resolution.backendDir, "multiplexus-backend.log");
-    const logFd = fs.openSync(logFile, "a");
     const tsxCli = resolveTsxCli(resolution.projectRoot);
 
     if (!tsxCli) {
@@ -212,15 +234,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
         return;
     }
 
-    const cmd = isWindows ? "node.exe" : "node";
-    const args = [tsxCli, "src/index.ts"];
-
-    const child = spawn(cmd, args, {
-        cwd: resolution.backendDir,
-        detached: true,
-        stdio: ["ignore", logFd, logFd],
-        windowsHide: true
-    });
+    const child = spawnBackendProcess(resolution.backendDir, tsxCli, logFile);
 
     if (!child.pid) {
         spinner.stop(t.start.failed);
@@ -229,7 +243,6 @@ export async function startBackendWizard(apiClient: ApiClient) {
         return;
     }
 
-    saveServerPid(resolution.backendDir, child.pid);
     child.unref();
 
     spinner.message(t.start.waitingReady);
@@ -237,13 +250,19 @@ export async function startBackendWizard(apiClient: ApiClient) {
     const isReady = await waitServerReady(url);
 
     if (!isReady) {
-        killServerProcess(child.pid);
+        const failedPid = findListeningPid(3000) ?? child.pid;
+        killServerProcess(failedPid);
         clearServerPid(resolution.backendDir);
         spinner.stop(t.start.failed);
         clack.log.error("Could not establish connection with router backend.");
         clack.log.warn(`Check backend logs at: ${logFile}`);
         clack.outro("");
         return;
+    }
+
+    const runningPid = findListeningPid(3000);
+    if (runningPid) {
+        saveServerPid(resolution.backendDir, runningPid);
     }
 
     spinner.message("Loading router administrative credentials...");
@@ -268,7 +287,45 @@ export async function startBackendWizard(apiClient: ApiClient) {
 }
 
 /**
- * Stops the backend server started by mpx start.
+ * Resolves the PID of a running multiplexus server.
+ * @param backendDir The backend directory.
+ * @param serverUp Whether the server is up.
+ * @returns The PID of the running server.
+ */
+function resolveRunningServerPid(backendDir: string, serverUp: boolean): number | null {
+    const savedPid = loadServerPid(backendDir);
+
+    if (savedPid && isProcessAlive(savedPid)) {
+        return savedPid;
+    }
+
+    if (!serverUp) {
+        return null;
+    }
+
+    return findListeningPid(3000);
+}
+
+/**
+ * Waits for the server to be down.
+ * @param url The URL of the server.
+ * @param maxAttempts The maximum number of attempts.
+ * @returns True if the server is down, false otherwise.
+ */
+async function waitForServerDown(url: string, maxAttempts: number = 10): Promise<boolean> {
+    for (let i = 0; i < maxAttempts; i++) {
+        if (!(await checkServerReady(url))) {
+            return true;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+    }
+
+    return false;
+}
+
+/**
+ * Stops the multiplexus backend server on port 3000.
  */
 export async function stopBackendWizard() {
     clack.intro(t.stop.searchingBackend);
@@ -281,27 +338,19 @@ export async function stopBackendWizard() {
     }
 
     const url = "http://localhost:3000";
-    const pid = loadServerPid(resolution.backendDir);
     const serverUp = await checkServerReady(url);
 
-    if (!pid) {
-        if (serverUp) {
-            clack.log.warn(t.stop.runningWithoutPid);
-        } else {
-            clack.log.warn(t.stop.notRunning);
-        }
+    if (!serverUp) {
+        clearServerPid(resolution.backendDir);
+        clack.log.warn(t.stop.notRunning);
         clack.outro("");
         return;
     }
 
-    if (!isProcessAlive(pid)) {
-        clearServerPid(resolution.backendDir);
+    const pid = resolveRunningServerPid(resolution.backendDir, serverUp);
 
-        if (serverUp) {
-            clack.log.warn(t.stop.runningWithoutPid);
-        } else {
-            clack.log.warn(t.stop.stalePid);
-        }
+    if (!pid) {
+        clack.log.warn(t.stop.notRunning);
         clack.outro("");
         return;
     }
@@ -319,14 +368,12 @@ export async function stopBackendWizard() {
         return;
     }
 
-    for (let i = 0; i < 10; i++) {
-        if (!(await checkServerReady(url))) {
-            spinner.stop(t.stop.stopped);
-            clack.outro("");
-            return;
-        }
+    const stopped = await waitForServerDown(url);
 
-        await new Promise(resolve => setTimeout(resolve, 500));
+    if (stopped) {
+        spinner.stop(t.stop.stopped);
+        clack.outro("");
+        return;
     }
 
     spinner.stop(t.stop.failed);

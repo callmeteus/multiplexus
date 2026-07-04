@@ -8,6 +8,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const logsDir = path.join(__dirname, "..", "logs");
+
+// Create the logs directory if it doesn't exist.
 if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
 }
@@ -47,11 +49,13 @@ export const logger = createLogger({
                 logFormat
             )
         }),
+
         new transports.DailyRotateFile({
             ...sharedRotateOptions,
             filename: "error-%DATE%.log",
             level: "error"
         }),
+
         new transports.DailyRotateFile({
             ...sharedRotateOptions,
             filename: "combined-%DATE%.log"
