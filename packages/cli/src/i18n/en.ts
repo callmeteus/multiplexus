@@ -25,6 +25,8 @@ export const en = {
         typePrompt: "Select API Type preset:",
         baseUrlPrompt: "Enter API Base URL (leave empty for default):",
         selectPrompt: "Select a provider:",
+        freeTierBadge: "★ free",
+        freeTierLegend: "★ = free tier available",
         success: "Provider successfully registered!"
     },
 

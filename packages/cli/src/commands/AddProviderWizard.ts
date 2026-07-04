@@ -7,6 +7,19 @@ import { loginGoogle } from "./add_provider_wizard/GoogleLogin";
 import { loginAnthropic } from "./add_provider_wizard/AnthropicLogin";
 import { loginXai } from "./add_provider_wizard/XaiLogin";
 
+/**
+ * Formats the preset label.
+ * @param preset The preset.
+ * @returns The formatted preset label.
+ */
+function formatPresetLabel(preset: { label: string; freeTier?: string[] }): string {
+    if (preset.freeTier && preset.freeTier.length > 0) {
+        return `${preset.label} ${t.provider.freeTierBadge}`;
+    }
+
+    return preset.label;
+}
+
 export async function addProviderWizard(apiClient: ApiClient) {
     await ensureCredentials(apiClient);
     clack.intro(t.menu.addProvider);
@@ -24,9 +37,13 @@ export async function addProviderWizard(apiClient: ApiClient) {
 
     const providers = await apiClient.getProviders().catch(() => [] as any[]);
 
+    if (presets.some(p => p.freeTier?.length > 0)) {
+        clack.note(t.provider.freeTierLegend);
+    }
+
     const selection = await clack.select({
         message: t.provider.selectPrompt,
-        options: presets.map(p => ({ value: p.value, label: p.label }))
+        options: presets.map(p => ({ value: p.value, label: formatPresetLabel(p) }))
     });
 
     if (clack.isCancel(selection)) {

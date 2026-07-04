@@ -27,6 +27,8 @@ export const pt: Dictionary = {
         typePrompt: "Selecione o tipo de API:",
         baseUrlPrompt: "Digite a URL Base da API (deixe em branco para o padrão):",
         selectPrompt: "Selecione um provider:",
+        freeTierBadge: "★ grátis",
+        freeTierLegend: "★ = tier gratuito disponível",
         success: "Provider registrado com sucesso!"
     },
 
