@@ -268,7 +268,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
 }
 
 /**
- * Stops the backend server started by mp start.
+ * Stops the backend server started by mpx start.
  */
 export async function stopBackendWizard() {
     clack.intro(t.stop.searchingBackend);

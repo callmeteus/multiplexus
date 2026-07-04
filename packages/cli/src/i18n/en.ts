@@ -16,6 +16,7 @@ export const en = {
         managePlugins: "Manage Client Plugins (e.g. Caveman)",
         helpGuide: "Help & Setup Guide",
         startServer: "Start Local Router Server",
+        stopServer: "Stop Local Router Server",
         exit: "Exit"
     },
 
@@ -105,11 +106,13 @@ export const en = {
         starting: "Starting multiplexus server...",
         waitingReady: "Waiting for server to be ready...",
         ready: "Server is up and running!",
+        alreadyRunning: "Router server is already running on port 3000.",
+        failed: "Backend failed to respond on port 3000.",
         credentialsLoaded: "Admin credentials loaded and saved to CLI config.",
-        credentialsMissing: "Server started but credentials file not found yet. Wait a moment and run 'mp start' again.",
+        credentialsMissing: "Server started but credentials file not found yet. Wait a moment and run 'mpx start' again.",
         instructionsTitle: "How to use with AI tools",
         baseUrl: "Base URL (OpenAI-compatible):",
-        apiKey: "Your client API key (generate with 'mp user create'):",
+        apiKey: "Your client API key (generate with 'mpx user create'):",
 
         tools: [
             {
@@ -135,6 +138,17 @@ export const en = {
         ]
     },
 
+    stop: {
+        searchingBackend: "Looking for multiplexus backend process...",
+        stopping: "Stopping multiplexus server...",
+        stopped: "Server stopped.",
+        notRunning: "No multiplexus server is running.",
+        stalePid: "Stale PID file removed. Server is not running.",
+        runningWithoutPid: "Server is running on port 3000, but was not started by 'mpx start'. Stop it manually (e.g. yarn dev).",
+        failed: "Could not stop the server process.",
+        stillResponding: "Process was killed but port 3000 is still responding."
+    },
+
     setup: {
         title: "multiplexus Setup Required",
         keyWarn: "We couldn't detect your initial admin key automatically. Please configure your connection.",
@@ -147,6 +161,7 @@ export const en = {
 
     yargs: {
         startDesc: "Start the local multiplexus router server in background",
+        stopDesc: "Stop the local multiplexus router server started by mpx start",
         providerDesc: "Manage providers",
         providerActionDesc: "Action: add",
         routeDesc: "Manage model routes",

@@ -18,6 +18,7 @@ export const pt: Dictionary = {
         managePlugins: "Gerenciar Plugins de Clientes (ex: Caveman)",
         helpGuide: "Guia de Ajuda e Setup",
         startServer: "Iniciar Servidor do Roteador Local",
+        stopServer: "Parar Servidor do Roteador Local",
         exit: "Sair"
     },
 
@@ -105,11 +106,13 @@ export const pt: Dictionary = {
         starting: "Iniciando o servidor multiplexus...",
         waitingReady: "Aguardando o servidor ficar pronto...",
         ready: "Servidor está online e rodando!",
+        alreadyRunning: "O servidor já está rodando na porta 3000.",
+        failed: "O backend não respondeu na porta 3000.",
         credentialsLoaded: "Credenciais de administrador carregadas e salvas na configuração da CLI.",
-        credentialsMissing: "Servidor iniciado, mas o arquivo de credenciais iniciais ainda não foi gerado. Aguarde um momento e execute 'mp start' novamente.",
+        credentialsMissing: "Servidor iniciado, mas o arquivo de credenciais iniciais ainda não foi gerado. Aguarde um momento e execute 'mpx start' novamente.",
         instructionsTitle: "Como usar com ferramentas de IA",
         baseUrl: "Base URL (compatível com OpenAI):",
-        apiKey: "Sua chave de API de cliente (gere uma com 'mp user create'):",
+        apiKey: "Sua chave de API de cliente (gere uma com 'mpx user create'):",
         tools: [
             {
                 name: "Claude Code",
@@ -134,6 +137,17 @@ export const pt: Dictionary = {
         ]
     },
 
+    stop: {
+        searchingBackend: "Procurando processo do backend multiplexus...",
+        stopping: "Parando servidor multiplexus...",
+        stopped: "Servidor parado.",
+        notRunning: "Nenhum servidor multiplexus está rodando.",
+        stalePid: "Arquivo PID obsoleto removido. O servidor não está rodando.",
+        runningWithoutPid: "O servidor está na porta 3000, mas não foi iniciado com 'mpx start'. Pare manualmente (ex: yarn dev).",
+        failed: "Não foi possível parar o processo do servidor.",
+        stillResponding: "O processo foi encerrado, mas a porta 3000 ainda responde."
+    },
+
     setup: {
         title: "multiplexus Configuração Necessária",
         keyWarn: "Não conseguimos detectar sua chave de admin inicial automaticamente. Por favor, configure sua conexão.",
@@ -146,6 +160,7 @@ export const pt: Dictionary = {
 
     yargs: {
         startDesc: "Inicia o servidor roteador multiplexus local em segundo plano",
+        stopDesc: "Para o servidor roteador multiplexus iniciado com mpx start",
         providerDesc: "Gerenciar providers",
         providerActionDesc: "Ação: add",
         routeDesc: "Gerenciar rotas de modelos",

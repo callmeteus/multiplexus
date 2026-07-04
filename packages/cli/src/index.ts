@@ -8,7 +8,7 @@ import { addProviderWizard } from "./commands/AddProviderWizard";
 import { addRouteWizard } from "./commands/AddRouteWizard";
 import { generateClientKeyWizard, listUsersWizard } from "./commands/AddUserWizard";
 import { helpWizard } from "./commands/HelpWizard";
-import { startBackendWizard } from "./commands/StartWizard";
+import { startBackendWizard, stopBackendWizard } from "./commands/StartWizard";
 import { managePluginsWizard } from "./commands/PluginWizard";
 
 const apiClient = new ApiClient();
@@ -21,6 +21,7 @@ async function runInteractiveMenu() {
             message: t.menu.selectAction,
             options: [
                 { value: "start", label: t.menu.startServer },
+                { value: "stop", label: t.menu.stopServer },
                 { value: "provider", label: t.menu.addProvider },
                 { value: "route", label: t.menu.addRoute },
                 { value: "client", label: t.menu.addUser },
@@ -38,6 +39,9 @@ async function runInteractiveMenu() {
 
         if (action === "start") {
             await startBackendWizard(apiClient);
+        } else
+        if (action === "stop") {
+            await stopBackendWizard();
         } else
         if (action === "provider") {
             await addProviderWizard(apiClient);
@@ -62,7 +66,7 @@ async function runInteractiveMenu() {
 
 async function main() {
     const argv = await yargs(hideBin(process.argv))
-        .scriptName("mp")
+        .scriptName("mpx")
         .usage("$0 [command] [action]")
         .command(
             "start",
@@ -70,6 +74,14 @@ async function main() {
             () => {},
             async () => {
                 await startBackendWizard(apiClient);
+            }
+        )
+        .command(
+            "stop",
+            t.yargs.stopDesc,
+            () => {},
+            async () => {
+                await stopBackendWizard();
             }
         )
         .command(
