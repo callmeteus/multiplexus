@@ -1,4 +1,4 @@
-﻿import { BaseProvider, ProviderResponse } from "./BaseProvider";
+import { BaseProvider, ProviderResponse } from "./BaseProvider";
 
 export class OpenAIProvider implements BaseProvider {
     async execute(

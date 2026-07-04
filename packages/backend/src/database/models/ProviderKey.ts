@@ -1,4 +1,4 @@
-﻿import { Table, Column, Model, DataType, ForeignKey, BelongsTo } from "sequelize-typescript";
+import { Table, Column, Model, DataType, ForeignKey, BelongsTo } from "sequelize-typescript";
 import { Provider } from "./Provider";
 
 @Table({

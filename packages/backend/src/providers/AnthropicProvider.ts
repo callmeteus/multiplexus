@@ -1,4 +1,4 @@
-﻿import { BaseProvider, ProviderResponse } from "./BaseProvider";
+import { BaseProvider, ProviderResponse } from "./BaseProvider";
 
 class AnthropicToOpenAIStreamTransformer {
     private decoder = new TextDecoder();

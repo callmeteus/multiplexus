@@ -1,4 +1,4 @@
-﻿import { FastifyRequest, FastifyReply } from "fastify";
+import { FastifyRequest, FastifyReply } from "fastify";
 import { authenticate } from "../../database/Auth";
 import { ModelRoute } from "../../database/models/ModelRoute";
 
