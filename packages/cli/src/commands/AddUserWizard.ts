@@ -9,7 +9,7 @@ import { t } from "../i18n/index";
  * @param apiClient The API client.
  */
 export async function generateClientKeyWizard(apiClient: ApiClient) {
-    await ensureCredentials(apiClient);
+    await ensureCredentials(apiClient, { requireAdmin: true });
     clack.intro(t.menu.addUser);
 
     const name = await clack.text({
@@ -55,7 +55,7 @@ export async function generateClientKeyWizard(apiClient: ApiClient) {
  * @param apiClient The API client.
  */
 export async function listUsersWizard(apiClient: ApiClient) {
-    await ensureCredentials(apiClient);
+    await ensureCredentials(apiClient, { requireAdmin: true });
     clack.intro(t.menu.listUsers);
 
     const spinner = clack.spinner();

@@ -21,7 +21,7 @@ function formatPresetLabel(preset: { label: string; freeTier?: string[] }): stri
 }
 
 export async function addProviderWizard(apiClient: ApiClient) {
-    await ensureCredentials(apiClient);
+    await ensureCredentials(apiClient, { requireAdmin: true });
     clack.intro(t.menu.addProvider);
 
     const isPt = t.menu.welcome.includes("Bem-vindo");
@@ -104,7 +104,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
             spinnerReg.stop(t.provider.success);
         } catch (err: any) {
             spinnerReg.stop("Error registering provider");
-            clack.log.error(`${t.common.error} dots`.replace("\dots", err.message));
+            clack.log.error(`${t.common.error} ${err.message}`);
             return;
         }
     } else {
@@ -133,7 +133,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
                 spinnerReg.stop(t.provider.success);
             } catch (err: any) {
                 spinnerReg.stop("Error registering provider");
-                clack.log.error(`${t.common.error} dots`.replace("\dots", err.message));
+                clack.log.error(`${t.common.error} ${err.message}`);
                 return;
             }
         }
@@ -166,7 +166,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
                 key = await loginXai();
             }
         } catch (err: any) {
-            clack.log.error(`OAuth connection failed: dots`.replace("\dots", err.message));
+            clack.log.error(`OAuth connection failed: ${err.message}`);
             return;
         }
     } else {
@@ -186,7 +186,7 @@ export async function addProviderWizard(apiClient: ApiClient) {
         if (mode === "guided") {
             const guide = selectedPreset.guide;
             if (guide) {
-                clack.note(`${guide.step1}\ndots\n${guide.step3}`.replace("\dots", guide.step2), `${providerName} Guide`);
+                clack.note(`${guide.step1}\n${guide.step2}\n${guide.step3}`, `${providerName} Guide`);
             } else {
                 clack.note(`Follow setup instructions for your custom provider '${providerName}' to generate a valid API key.`, "Custom Guide");
             }

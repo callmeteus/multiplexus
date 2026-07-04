@@ -110,6 +110,7 @@ export const en = {
         ready: "Server is up and running!",
         alreadyRunning: "Router server is already running on port 3000.",
         failed: "Backend failed to respond on port 3000.",
+        checkLogs: "Check spawn log: {spawnLog}\nOr runtime log: {combinedLog}",
         credentialsLoaded: "Admin credentials loaded and saved to CLI config.",
         credentialsMissing: "Server started but credentials file not found yet. Wait a moment and run 'mpx start' again.",
         instructionsTitle: "How to use with AI tools",
@@ -158,6 +159,11 @@ export const en = {
         urlRequired: "URL is required",
         keyPrompt: "Enter Admin API Key:",
         keyRequired: "Admin API Key is required",
+        adminKeyPrompt: "Enter Admin API Key (from initial-credentials.data or 'mpx start'):",
+        adminKeyWarn: "Admin privileges are required. Use the Admin API Key, not a client key.",
+        adminKeyInvalid: "The saved key does not have admin permissions. Trying to reload from project credentials...",
+        adminKeyRefreshed: "Admin credentials refreshed from project.",
+        adminKeyRequired: "Admin API Key is required. Run 'mpx start' or check packages/backend/initial-credentials.data.",
         success: "Credentials saved locally!"
     },
 
@@ -171,7 +177,7 @@ export const en = {
         userDesc: "Manage client users",
         userActionDesc: "Action: create | list",
         helpDesc: "Show provider setup guide",
-        pluginDesc: "Manage client plugins (e.g. caveman)",
+        pluginDesc: "Manage client plugins",
         pluginActionDesc: "Action: toggle"
     },
     plugin: {

@@ -5,6 +5,7 @@ import * as path from "path";
 import { ApiClient } from "../ApiClient";
 import { t } from "../i18n/index";
 import { saveLocalConfig } from "../config/LocalConfig";
+import { readAdminCredentialsFile, resolveBackend } from "../config/BackendResolution";
 import {
     clearServerPid,
     findListeningPid,
@@ -15,69 +16,8 @@ import {
 } from "../config/ServerProcess";
 
 /**
- * The backend resolution.
+ * Resolves the tsx CLI path.
  */
-interface BackendResolution {
-    projectRoot: string;
-    backendDir: string;
-    isCompiled: boolean;
-}
-
-/**
- * Resolves the backend directory.
- * @returns The backend resolution.
- */
-function resolveBackend(): BackendResolution | null {
-    // Search relative to process.cwd() (up to 4 parent directories)
-    let currentDir = process.cwd();
-
-    for (let i = 0; i < 4; i++) {
-        const backendPath = path.join(currentDir, "packages", "backend");
-
-        if (fs.existsSync(path.join(backendPath, "package.json"))) {
-            const isCompiled = fs.existsSync(path.join(backendPath, "dist", "index.js"));
-            return { projectRoot: currentDir, backendDir: backendPath, isCompiled };
-        }
-
-        const siblingPath = path.join(currentDir, "backend");
-
-        if (fs.existsSync(path.join(siblingPath, "package.json"))) {
-            const isCompiled = fs.existsSync(path.join(siblingPath, "dist", "index.js"));
-            return { projectRoot: currentDir, backendDir: siblingPath, isCompiled };
-        }
-
-        const parentDir = path.dirname(currentDir);
-
-        if (parentDir === currentDir) {
-            break;
-        }
-
-        currentDir = parentDir;
-    }
-
-    // Then search upwards from the physical __dirname (for global/local npm links)
-    let fileDir = __dirname;
-
-    for (let i = 0; i < 6; i++) {
-        const backendPath = path.join(fileDir, "packages", "backend");
-
-        if (fs.existsSync(path.join(backendPath, "package.json"))) {
-            const isCompiled = fs.existsSync(path.join(backendPath, "dist", "index.js"));
-            return { projectRoot: fileDir, backendDir: backendPath, isCompiled };
-        }
-
-        const parentDir = path.dirname(fileDir);
-
-        if (parentDir === fileDir) {
-            break;
-        }
-
-        fileDir = parentDir;
-    }
-
-    return null;
-}
-
 function resolveTsxCli(projectRoot: string): string | null {
     const candidates = [
         path.join(projectRoot, "node_modules", "tsx", "dist", "cli.mjs"),
@@ -93,21 +33,65 @@ function resolveTsxCli(projectRoot: string): string | null {
     return null;
 }
 
-function spawnBackendProcess(backendDir: string, tsxCli: string, logFile: string) {
-    const isWindows = process.platform === "win32";
+function getBackendLogsDir(backendDir: string): string {
+    return path.join(backendDir, "logs");
+}
 
-    if (isWindows) {
-        // detached node.exe on Windows opens a blank console window; start /B avoids that
-        const command = `start /B "" "${process.execPath}" "${tsxCli}" src/index.ts 1>>"${logFile}" 2>&1`;
-        return spawn("cmd.exe", ["/d", "/s", "/c", command], {
+function getSpawnLogFile(backendDir: string): string {
+    const logsDir = getBackendLogsDir(backendDir);
+    fs.mkdirSync(logsDir, { recursive: true });
+    return path.join(logsDir, "spawn.log");
+}
+
+function getBackendLogHint(backendDir: string): string {
+    const today = new Date().toISOString().slice(0, 10);
+    return path.join(getBackendLogsDir(backendDir), `combined-${today}.log`);
+}
+
+function quotePowerShell(value: string): string {
+    return `'${value.replace(/'/g, "''")}'`;
+}
+
+function createWindowsLauncher(backendDir: string, tsxCli: string, logFile: string): string {
+    const launcherPath = path.join(getBackendLogsDir(backendDir), "start-backend.cmd");
+    const launcherContent = [
+        "@echo off",
+        `cd /d "${backendDir}"`,
+        `"${process.execPath}" "${tsxCli}" src/index.ts 1>>"${logFile}" 2>&1`
+    ].join("\r\n");
+
+    fs.writeFileSync(launcherPath, launcherContent, "utf-8");
+    return launcherPath;
+}
+
+function spawnBackendProcess(backendDir: string, tsxCli: string, logFile: string) {
+    if (process.platform === "win32") {
+        const launcherPath = createWindowsLauncher(backendDir, tsxCli, logFile);
+        const command = [
+            "Start-Process",
+            "-FilePath 'cmd.exe'",
+            `-ArgumentList ${quotePowerShell(`/d /s /c ""${launcherPath}""`)}`,
+            `-WorkingDirectory ${quotePowerShell(backendDir)}`,
+            "-WindowStyle Hidden"
+        ].join(" ");
+
+        return spawn("powershell.exe", [
+            "-NoProfile",
+            "-ExecutionPolicy",
+            "Bypass",
+            "-WindowStyle",
+            "Hidden",
+            "-Command",
+            command
+        ], {
             cwd: backendDir,
-            detached: true,
             stdio: "ignore",
             windowsHide: true
         });
     }
 
     const logFd = fs.openSync(logFile, "a");
+
     return spawn(process.execPath, [tsxCli, "src/index.ts"], {
         cwd: backendDir,
         detached: true,
@@ -160,31 +144,7 @@ async function waitServerReady(url: string, maxAttempts: number = 30): Promise<b
  * @returns The credentials.
  */
 function readCredentialsFile(backendDir: string): { apiKey: string; url: string } | null {
-    const pathsToTry = [
-        path.join(backendDir, "initial-credentials.data"),
-        path.join(path.dirname(backendDir), "initial-credentials.data")
-    ];
-
-    for (const filePath of pathsToTry) {
-        if (fs.existsSync(filePath)) {
-            try {
-                const content = fs.readFileSync(filePath, "utf-8");
-                const keyMatch = content.match(/Admin API Key:\s+(sk-mux-[a-f0-9]+)/);
-                const urlMatch = content.match(/Router URL:\s+(http\S+)/);
-
-                if (keyMatch) {
-                    return {
-                        apiKey: keyMatch[1],
-                        url: urlMatch ? urlMatch[1] : "http://localhost:3000"
-                    };
-                }
-            } catch (_) {
-                // Ignore
-            }
-        }
-    }
-
-    return null;
+    return readAdminCredentialsFile(backendDir);
 }
 
 /**
@@ -224,7 +184,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
     const spinner = clack.spinner();
     spinner.start(t.start.starting);
 
-    const logFile = path.join(resolution.backendDir, "multiplexus-backend.log");
+    const spawnLogFile = getSpawnLogFile(resolution.backendDir);
     const tsxCli = resolveTsxCli(resolution.projectRoot);
 
     if (!tsxCli) {
@@ -234,7 +194,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
         return;
     }
 
-    const child = spawnBackendProcess(resolution.backendDir, tsxCli, logFile);
+    const child = spawnBackendProcess(resolution.backendDir, tsxCli, spawnLogFile);
 
     if (!child.pid) {
         spinner.stop(t.start.failed);
@@ -255,7 +215,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
         clearServerPid(resolution.backendDir);
         spinner.stop(t.start.failed);
         clack.log.error("Could not establish connection with router backend.");
-        clack.log.warn(`Check backend logs at: ${logFile}`);
+        clack.log.warn(t.start.checkLogs.replace("{spawnLog}", spawnLogFile).replace("{combinedLog}", getBackendLogHint(resolution.backendDir)));
         clack.outro("");
         return;
     }

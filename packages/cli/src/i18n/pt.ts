@@ -110,6 +110,7 @@ export const pt: Dictionary = {
         ready: "Servidor está online e rodando!",
         alreadyRunning: "O servidor já está rodando na porta 3000.",
         failed: "O backend não respondeu na porta 3000.",
+        checkLogs: "Veja o log de spawn: {spawnLog}\nOu o log de runtime: {combinedLog}",
         credentialsLoaded: "Credenciais de administrador carregadas e salvas na configuração da CLI.",
         credentialsMissing: "Servidor iniciado, mas o arquivo de credenciais iniciais ainda não foi gerado. Aguarde um momento e execute 'mpx start' novamente.",
         instructionsTitle: "Como usar com ferramentas de IA",
@@ -157,6 +158,11 @@ export const pt: Dictionary = {
         urlRequired: "URL é obrigatória",
         keyPrompt: "Digite a Chave de API de Admin:",
         keyRequired: "A Chave de API de Admin é obrigatória",
+        adminKeyPrompt: "Digite a Chave de API de Admin (de initial-credentials.data ou 'mpx start'):",
+        adminKeyWarn: "Permissões de admin são necessárias. Use a chave de Admin, não uma chave de cliente.",
+        adminKeyInvalid: "A chave salva não tem permissões de admin. Tentando recarregar as credenciais do projeto...",
+        adminKeyRefreshed: "Credenciais de admin recarregadas do projeto.",
+        adminKeyRequired: "Chave de Admin obrigatória. Rode 'mpx start' ou veja packages/backend/initial-credentials.data.",
         success: "Credenciais salvas localmente!"
     },
 
@@ -170,7 +176,7 @@ export const pt: Dictionary = {
         userDesc: "Gerenciar usuários/clientes",
         userActionDesc: "Ação: create | list",
         helpDesc: "Exibe o guia de ajuda de setup de providers",
-        pluginDesc: "Gerenciar plugins de clientes (ex: caveman)",
+        pluginDesc: "Gerenciar plugins de clientes",
         pluginActionDesc: "Ação: toggle"
     },
     plugin: {

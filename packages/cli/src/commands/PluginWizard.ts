@@ -4,7 +4,7 @@ import { ensureCredentials } from "../config/LocalConfig";
 import { t } from "../i18n/index";
 
 export async function managePluginsWizard(apiClient: ApiClient) {
-    await ensureCredentials(apiClient);
+    await ensureCredentials(apiClient, { requireAdmin: true });
     clack.intro(t.plugin.title);
 
     const users = await apiClient.getUsers().catch(() => [] as any[]);

@@ -8,7 +8,7 @@ import { t } from "../i18n/index";
  * @param apiClient The API client.
  */
 export async function addRouteWizard(apiClient: ApiClient) {
-    await ensureCredentials(apiClient);
+    await ensureCredentials(apiClient, { requireAdmin: true });
     clack.intro(t.menu.addRoute);
 
     const providers = await apiClient.getProviders().catch(() => [] as any[]);

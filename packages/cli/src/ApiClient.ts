@@ -56,19 +56,56 @@ export class ApiClient {
         }
     }
 
+    /**
+     * Sets the credentials.
+     * @param url The URL.
+     * @param key The key.
+     */
     setCredentials(url: string, key: string) {
         this.baseUrl = url;
         this.adminKey = key;
     }
 
+    /**
+     * Checks if the credentials are set.
+     * @returns True if the credentials are set, false otherwise.
+     */
     hasCredentials(): boolean {
         return !!this.adminKey;
     }
 
+    /**
+     * Gets the base URL.
+     * @returns The base URL.
+     */
     getBaseUrl(): string {
         return this.baseUrl;
     }
 
+    /**
+     * Checks if the admin API is accessible.
+     * @returns True if the admin API is accessible, false otherwise.
+     */
+    async canAccessAdminApi(): Promise<boolean> {
+        if (!this.adminKey) {
+            return false;
+        }
+
+        try {
+            await this.request("/api/providers");
+            return true;
+        } catch (_) {
+            return false;
+        }
+    }
+
+    /**
+     * Makes a request to the API.
+     * @param endpoint The endpoint.
+     * @param method The method.
+     * @param body The body.
+     * @returns The response.
+     */
     private async request(endpoint: string, method: string = "GET", body?: any): Promise<any> {
         const headers: Record<string, string> = {
             "Content-Type": "application/json"
@@ -113,6 +150,10 @@ export class ApiClient {
         return this.request("/api/providers/presets");
     }
 
+    /**
+     * Gets the providers.
+     * @returns The providers.
+     */
     async getProviders(): Promise<any[]> {
         return this.request("/api/providers");
     }
@@ -213,10 +254,22 @@ export class ApiClient {
         return this.request(`/api/users/${id}`, "DELETE");
     }
 
+    /**
+     * Gets the user plugins.
+     * @param userId The ID of the user.
+     * @returns The user plugins.
+     */
     async getUserPlugins(userId: number): Promise<any[]> {
         return this.request(`/api/users/${userId}/plugins`);
     }
 
+    /**
+     * Toggles a user plugin.
+     * @param userId The ID of the user.
+     * @param pluginName The name of the plugin.
+     * @param isEnabled Whether the plugin is enabled.
+     * @returns The user plugin.
+     */
     async toggleUserPlugin(userId: number, pluginName: string, isEnabled: boolean): Promise<any> {
         return this.request(`/api/users/${userId}/plugins`, "POST", { pluginName, isEnabled });
     }
