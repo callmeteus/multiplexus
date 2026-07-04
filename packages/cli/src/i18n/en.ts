@@ -35,13 +35,10 @@ export const en = {
         noRoutes: "No model routes configured yet. Please configure a route first.",
         welcome: "Chatting with {model}\nType '/exit' or press Ctrl+C to quit.",
         prompt: "You > ",
-        responsePrefix: "{model} > ",
         error: "Error: {message}",
         thinking: "Thinking...",
         responding: "{model} via {provider} is typing...",
         runningTools: "Running tools...",
-        skillsHint: "Code skills: read_file, write_file, search_replace, list_dir, run_command (approval required)",
-        cwdHint: "cwd: {cwd}",
         approveCommand: "Run this command?\n{command}\n(cwd: {cwd})",
         approveSkill: "Allow skill '{skill}' to run?"
     },

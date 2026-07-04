@@ -82,8 +82,6 @@ export async function chatWizard(apiClient: ApiClient) {
     console.log(chalk.bold.cyan("              multiplexus Chat Client             "));
     console.log(chalk.bold.cyan("=================================================="));
     console.log(chalk.gray(t.chat.welcome.replace("{model}", chalk.yellow(model))));
-    console.log(chalk.gray(t.chat.cwdHint.replace("{cwd}", skillContext.cwd)));
-    console.log(chalk.gray(t.chat.skillsHint));
     console.log(chalk.bold.cyan("=================================================="));
     console.log();
 

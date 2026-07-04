@@ -37,13 +37,10 @@ export const pt: Dictionary = {
         noRoutes: "Nenhuma rota de modelo configurada ainda. Por favor, configure uma rota primeiro.",
         welcome: "Conversando com {model}\nDigite '/exit' ou pressione Ctrl+C para sair.",
         prompt: "Você > ",
-        responsePrefix: "{model} > ",
         error: "Erro: {message}",
         thinking: "Pensando...",
         responding: "{model} via {provider} está digitando...",
         runningTools: "Executando ferramentas...",
-        skillsHint: "Skills: read_file, write_file, search_replace, list_dir, run_command (requer aprovação)",
-        cwdHint: "cwd: {cwd}",
         approveCommand: "Executar este comando?\n{command}\n(cwd: {cwd})",
         approveSkill: "Permitir execução da skill '{skill}'?"
     },
