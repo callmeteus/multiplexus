@@ -2,8 +2,7 @@
     "name": "@multiplexus/cli",
     "version": "1.0.0",
     "description": "CLI for multiplexus LLM router",
-    "private": true,
-    "type": "module",
+    "private": false,
     "main": "dist/index.js",
     "bin": {
         "multiplexus": "./dist/index.js",

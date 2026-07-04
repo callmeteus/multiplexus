@@ -1,9 +1,12 @@
-﻿{
+{
     "name": "@multiplexus/shared",
     "version": "1.0.0",
-    "type": "module",
     "exports": {
-        ".": "./src/index.ts"
+        ".": "./dist/index.js"
     },
-    "types": "./src/index.ts"
+    "types": "./dist/index.d.ts",
+    "main": "./dist/index.js",
+    "scripts": {
+        "build": "tsc"
+    }
 }
