@@ -1,5 +1,6 @@
 import caveman from "./caveman/index";
-export { PluginMetadata, definePlugin } from "./PluginTypes";
+export type { PluginMetadata } from "./PluginTypes";
+export { definePlugin } from "./PluginTypes";
 
 export const PLUGINS: Record<string, typeof caveman> = {
     caveman
