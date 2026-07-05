@@ -13,7 +13,7 @@
 
 **multiplexus** acts as a middleman between your AI-powered tools (like Claude Code, Cursor, Continue.dev, or custom applications) and LLM providers. By exposing a single OpenAI-compatible endpoint, it distributes requests, rotates multiple API keys, and seamlessly falls back to alternative models or providers when rate limits or server errors occur.
 
-[Quick Start](#-quick-start) • [Key Features](#-key-features) • [Plugin System (Caveman Mode)](#-plugin-system-caveman-mode) • [Tool Configuration](#%EF%B8%8F-connecting-your-tools) • [Architecture](#-architecture)
+[Quick Start](#-quick-start) • [Key Features](#-key-features) • [Plugin System](#-plugin-system) • [Tool Configuration](#%EF%B8%8F-connecting-your-tools) • [Architecture](#-architecture)
 
 </div>
 
@@ -25,25 +25,20 @@
 *   **⚖️ Weight-Based Load Balancing:** Register multiple keys for the same provider and assign them weights to distribute your traffic and optimize rate limits.
 *   **🛡️ Robust Fallback & Failover:** Group routes by priority. If a primary provider fails, is rate-limited (429), or faces downtime, multiplexus tries alternative keys, fallback models, or secondary providers sequentially.
 *   **🔌 Client-Key Plugin System:** Enable and toggle specialized modifiers and system prompts **per client key**.
-*   **💀 Caveman Mode integration:** Toggle token compression style globally or per client-key for up to **75% savings in output tokens**.
-*   **💻 Interactive CLI Wizard:** Entirely manageable via an interactive terminal interface supporting both English and Portuguese (i18n).
+*   **💻 Interactive CLI Wizard:** Entirely manageable via an interactive terminal interface supporting multiple languages.
 *   **⚡ Running Local Server with One Command:** Launch the backend server in background directly via `mpx start`.
-*   **🪵 Enterprise logging:** JSON logs powered by Winston with automatic daily rotate file capabilities.
 
 ---
 
-## 💀 Plugin System (Caveman Mode)
+## 💀 Plugin System
 
-multiplexus supports a modular **Plugin System** configurable **per client API Key** (e.g., enable Caveman for one client app, and keep full verbose responses for another).
+multiplexus supports a modular **Plugin System** configurable **per client API Key** (e.g., enable a plugin for one client app, and keep full verbose responses for another).
 
-### Caveman Mode
-Inspired by the [JuliusBrussee/caveman](https://github.com/JuliusBrussee/caveman) project, Caveman Mode optimizes your LLM interactions by drastically reducing token output usage (usually by **65% to 75%**). It forces models to speak in compressed, "telegraphic" shorthand sentences, stripping conversational filler and pleasantries while keeping code and commands 100% accurate.
-
-To enable Caveman Mode for any client key:
+To enable plugins for any client key:
 1. Open the multiplexus CLI wizard: `npx mpx`
 2. Select **Manage Client Plugins**.
-3. Select your target client key, choose `caveman`, and toggle it to `ENABLED`.
-4. *All subsequent API requests using that client key will now automatically speak in compressed Caveman format!*
+3. Select your target client key, choose your plugin, and toggle it to `ENABLED`.
+4. *All subsequent API requests using that client key will now automatically use the plugin!*
 
 ---
 
