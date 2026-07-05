@@ -1,20 +1,28 @@
 import * as clack from "@clack/prompts";
-import { spawn } from "child_process";
 import * as fs from "fs";
 import * as path from "path";
 import { ApiClient } from "../ApiClient";
 import { t } from "../i18n/index";
 import { syncAdminCredentials } from "../config/LocalConfig";
+import { ensureLocalBootstrap } from "../config/LocalBootstrap";
+import { updateCredentialsPublicUrl, readCredentialsWithPublicUrl } from "../config/CredentialsFile";
 import { resolveBackend } from "../config/BackendResolution";
 import { checkServerReady } from "../utils/ProcessUtils";
+import { spawnBackgroundProcess } from "../utils/BackgroundProcess";
+import { resolveActiveTunnelUrl, startPublicTunnel } from "../tunnel/TunnelManager";
 import {
-    clearServerPid,
     findListeningPid,
     isProcessAlive,
-    killServerProcess,
-    loadServerPid,
-    saveServerPid
+    killServerProcess
 } from "../config/ServerProcess";
+import {
+    clearPidRegistry,
+    hasManagedProcesses,
+    loadBackendPid,
+    loadPidRegistry,
+    setBackendPid,
+    stopManagedProcesses
+} from "../config/PidRegistry";
 
 /**
  * Resolves the tsx CLI path.
@@ -67,79 +75,6 @@ function getBackendLogHint(backendDir: string): string {
 }
 
 /**
- * Quotes a value for safe use inside a PowerShell single-quoted string.
- * @param value The value to quote.
- * @returns The quoted value.
- */
-function quotePowerShell(value: string): string {
-    return `'${value.replace(/'/g, "''")}'`;
-}
-
-/**
- * Creates a Windows launcher script that starts the backend without a visible console.
- * @param backendDir The backend directory.
- * @param tsxCli The tsx CLI path.
- * @param logFile The spawn log file path.
- * @returns The launcher script path.
- */
-function createWindowsLauncher(backendDir: string, tsxCli: string, logFile: string): string {
-    const launcherPath = path.join(getBackendLogsDir(backendDir), "start-backend.cmd");
-    const launcherContent = [
-        "@echo off",
-        `cd /d "${backendDir}"`,
-        `"${process.execPath}" "${tsxCli}" src/index.ts 1>>"${logFile}" 2>&1`
-    ].join("\r\n");
-
-    fs.writeFileSync(launcherPath, launcherContent, "utf-8");
-    return launcherPath;
-}
-
-/**
- * Spawns the backend process in the background.
- * @param backendDir The backend directory.
- * @param tsxCli The tsx CLI path.
- * @param logFile The spawn log file path.
- * @returns The spawned child process.
- */
-function spawnBackendProcess(backendDir: string, tsxCli: string, logFile: string) {
-    if (process.platform === "win32") {
-        const launcherPath = createWindowsLauncher(backendDir, tsxCli, logFile);
-        const command = [
-            "Start-Process",
-            "-FilePath 'cmd.exe'",
-            `-ArgumentList ${quotePowerShell(`/d /s /c ""${launcherPath}""`)}`,
-            `-WorkingDirectory ${quotePowerShell(backendDir)}`,
-            "-WindowStyle Hidden"
-        ].join(" ");
-
-        return spawn("powershell.exe", [
-            "-NoProfile",
-            "-ExecutionPolicy",
-            "Bypass",
-            "-WindowStyle",
-            "Hidden",
-            "-Command",
-            command
-        ], {
-            cwd: backendDir,
-            stdio: "ignore",
-            windowsHide: true
-        });
-    }
-
-    const logFd = fs.openSync(logFile, "a");
-
-    return spawn(process.execPath, [tsxCli, "src/index.ts"], {
-        cwd: backendDir,
-        detached: true,
-        stdio: ["ignore", logFd, logFd],
-        windowsHide: true
-    });
-}
-
-
-
-/**
  * Waits for the server to be ready.
  * @param url The URL of the server.
  * @param maxAttempts The maximum number of attempts.
@@ -155,6 +90,59 @@ async function waitServerReady(url: string, maxAttempts: number = 30): Promise<b
     }
 
     return false;
+}
+
+/**
+ * Bootstraps local preset routes and starts a free public tunnel for editors.
+ * @param apiClient The API client.
+ * @param backendDir The backend directory.
+ */
+async function finalizeLocalStart(apiClient: ApiClient, backendDir: string): Promise<void> {
+    const spinner = clack.spinner();
+
+    try {
+        spinner.start(t.start.bootstrappingProviders);
+        await ensureLocalBootstrap(apiClient);
+        spinner.stop(t.start.bootstrapReady);
+    } catch (err: any) {
+        spinner.stop(t.start.bootstrapFailed.replace("{message}", err.message));
+    }
+
+    let publicUrl = await resolveActiveTunnelUrl(backendDir);
+
+    if (!publicUrl && !process.env.MULTIPLEXUS_NO_TUNNEL) {
+        const tunnelSpinner = clack.spinner();
+        tunnelSpinner.start(t.start.startingFreeTunnel);
+
+        publicUrl = await startPublicTunnel(backendDir, 3000);
+
+        if (publicUrl) {
+            updateCredentialsPublicUrl(backendDir, publicUrl);
+            tunnelSpinner.stop(t.start.freeTunnelReady.replace("{url}", publicUrl));
+        } else {
+            tunnelSpinner.stop(t.start.freeTunnelFailed);
+        }
+    } else
+    if (publicUrl) {
+        clack.log.info(t.start.freeTunnelReused.replace("{url}", publicUrl));
+    }
+
+    const creds = readCredentialsWithPublicUrl(backendDir);
+    const editorBase = publicUrl ? `${publicUrl}/v1` : "http://localhost:3000/v1";
+
+    console.log();
+    clack.log.info(t.start.instructionsTitle);
+    clack.log.info(`${t.start.publicBaseUrl} ${editorBase}`);
+
+    if (creds?.apiKey) {
+        clack.log.info(`${t.start.apiKey} ${creds.apiKey}`);
+    }
+
+    clack.log.info(t.start.suggestedModel.replace("{model}", "free"));
+
+    for (const tool of t.start.tools) {
+        clack.log.step(`${tool.name}: ${tool.instruction}`);
+    }
 }
 
 /**
@@ -181,6 +169,9 @@ export async function startBackendWizard(apiClient: ApiClient) {
             clack.log.success(t.start.alreadyRunning);
             clack.log.warn(t.start.credentialsStale);
         }
+
+        await finalizeLocalStart(apiClient, resolution.backendDir);
+
         clack.outro("");
         return;
     }
@@ -198,27 +189,24 @@ export async function startBackendWizard(apiClient: ApiClient) {
         return;
     }
 
-    const child = spawnBackendProcess(resolution.backendDir, tsxCli, spawnLogFile);
-
-    if (!child.pid) {
-        spinner.stop(t.start.failed);
-        clack.log.error(t.start.processStartFailed);
-        clack.outro("");
-        return;
-    }
-
-    child.unref();
+    const { pid } = spawnBackgroundProcess(process.execPath, [tsxCli, "src/index.ts"], {
+        cwd: resolution.backendDir,
+        logFile: spawnLogFile,
+        launcherName: "start-backend.cmd"
+    });
 
     spinner.message(t.start.waitingReady);
 
     const isReady = await waitServerReady(url);
 
     if (!isReady) {
-        const failedPid = findListeningPid(3000) ?? child.pid;
-        killServerProcess(failedPid);
-        clearServerPid(resolution.backendDir);
+        const failedPid = findListeningPid(3000) ?? pid;
+        if (failedPid) {
+            killServerProcess(failedPid);
+        }
+        clearPidRegistry(resolution.backendDir);
         spinner.stop(t.start.failed);
-        clack.log.error(t.start.connectionFailed);
+        clack.log.error(pid ? t.start.connectionFailed : t.start.processStartFailed);
         clack.log.warn(t.start.checkLogs.replace("{spawnLog}", spawnLogFile).replace("{combinedLog}", getBackendLogHint(resolution.backendDir)));
         clack.outro("");
         return;
@@ -226,7 +214,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
 
     const runningPid = findListeningPid(3000);
     if (runningPid) {
-        saveServerPid(resolution.backendDir, runningPid);
+        setBackendPid(resolution.backendDir, runningPid);
     }
 
     spinner.message(t.start.loadingCredentials);
@@ -239,6 +227,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
         clack.log.warn(t.start.credentialsStale);
     }
 
+    await finalizeLocalStart(apiClient, resolution.backendDir);
     clack.outro("");
 }
 
@@ -249,7 +238,7 @@ export async function startBackendWizard(apiClient: ApiClient) {
  * @returns The PID of the running server.
  */
 function resolveRunningServerPid(backendDir: string, serverUp: boolean): number | null {
-    const savedPid = loadServerPid(backendDir);
+    const savedPid = loadBackendPid(backendDir);
 
     if (savedPid && isProcessAlive(savedPid)) {
         return savedPid;
@@ -295,17 +284,11 @@ export async function stopBackendWizard() {
 
     const url = "http://localhost:3000";
     const serverUp = await checkServerReady(url);
+    const registry = loadPidRegistry(resolution.backendDir);
+    const tunnelRunning = Boolean(registry.tunnel?.pid && isProcessAlive(registry.tunnel.pid));
 
-    if (!serverUp) {
-        clearServerPid(resolution.backendDir);
-        clack.log.warn(t.stop.notRunning);
-        clack.outro("");
-        return;
-    }
-
-    const pid = resolveRunningServerPid(resolution.backendDir, serverUp) ?? findListeningPid(3000);
-
-    if (!pid) {
+    if (!serverUp && !tunnelRunning && !hasManagedProcesses(resolution.backendDir)) {
+        clearPidRegistry(resolution.backendDir);
         clack.log.warn(t.stop.notRunning);
         clack.outro("");
         return;
@@ -314,32 +297,33 @@ export async function stopBackendWizard() {
     const spinner = clack.spinner();
     spinner.start(t.stop.stopping);
 
-    let killed = killServerProcess(pid);
+    const backendFallbackPid = serverUp
+        ? (resolveRunningServerPid(resolution.backendDir, serverUp) ?? findListeningPid(3000))
+        : null;
 
-    if (!killed) {
-        const portPid = findListeningPid(3000);
-        if (portPid && portPid !== pid) {
-            killed = killServerProcess(portPid);
-        }
-    }
-    clearServerPid(resolution.backendDir);
+    const { backendStopped, tunnelStopped } = stopManagedProcesses(resolution.backendDir, {
+        backendFallbackPid
+    });
 
-    if (!killed) {
-        spinner.stop(t.stop.failed);
-        clack.log.error(t.stop.failed);
-        clack.outro("");
-        return;
+    if (!backendStopped && serverUp && backendFallbackPid) {
+        killServerProcess(backendFallbackPid);
     }
 
-    const stopped = await waitForServerDown(url);
+    const stopped = serverUp ? await waitForServerDown(url) : true;
 
-    if (stopped) {
+    if (stopped || tunnelStopped) {
         spinner.stop(t.stop.stopped);
         clack.outro("");
         return;
     }
 
     spinner.stop(t.stop.failed);
-    clack.log.warn(t.stop.stillResponding);
+
+    if (serverUp) {
+        clack.log.warn(t.stop.stillResponding);
+    } else {
+        clack.log.error(t.stop.failed);
+    }
+
     clack.outro("");
 }

@@ -3,61 +3,6 @@ import * as fs from "fs";
 import * as path from "path";
 
 /**
- * The PID filename.
- */
-const PID_FILENAME = "multiplexus-backend.pid";
-
-/**
- * Gets the PID file path.
- * @param backendDir The backend directory.
- * @returns The PID file path.
- */
-function getPidFilePath(backendDir: string): string {
-    return path.join(backendDir, "logs", PID_FILENAME);
-}
-
-/**
- * Saves the server PID.
- * @param backendDir The backend directory.
- * @param pid The PID.
- */
-export function saveServerPid(backendDir: string, pid: number): void {
-    fs.writeFileSync(getPidFilePath(backendDir), String(pid), "utf-8");
-}
-
-/**
- * Loads the server PID.
- * @param backendDir The backend directory.
- * @returns The server PID.
- */
-export function loadServerPid(backendDir: string): number | null {
-    const pidFile = getPidFilePath(backendDir);
-
-    if (!fs.existsSync(pidFile)) {
-        return null;
-    }
-
-    try {
-        const pid = Number(fs.readFileSync(pidFile, "utf-8").trim());
-        return Number.isInteger(pid) && pid > 0 ? pid : null;
-    } catch (_) {
-        return null;
-    }
-}
-
-/**
- * Clears the server PID.
- * @param backendDir The backend directory.
- */
-export function clearServerPid(backendDir: string): void {
-    const pidFile = getPidFilePath(backendDir);
-
-    if (fs.existsSync(pidFile)) {
-        fs.unlinkSync(pidFile);
-    }
-}
-
-/**
  * Checks if the process is alive.
  * @param pid The PID.
  * @returns True if the process is alive, false otherwise.
@@ -104,7 +49,7 @@ export function findListeningPid(port: number): number | null {
 }
 
 /**
- * Kills the server process.
+ * Kills a process and its children when possible.
  * @param pid The PID.
  * @returns True if the process was killed, false otherwise.
  */

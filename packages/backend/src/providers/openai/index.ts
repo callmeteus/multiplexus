@@ -1,4 +1,15 @@
-import { BaseProvider, ProviderResponse } from "./BaseProvider";
+import { isKeylessApiKey } from "@multiplexus/shared";
+import { DiscoveredModel, ProviderHandler, fetchOpenAICompatibleList, sortModels } from "../../ProviderHandler";
+import { BaseProvider, ProviderResponse } from "../BaseProvider";
+
+export const openaiHandler: ProviderHandler = {
+    displayName: "OpenAI",
+
+    async fetchModels(apiKey = "", baseUrl = "https://api.openai.com/v1"): Promise<DiscoveredModel[]> {
+        const models = await fetchOpenAICompatibleList(baseUrl, apiKey);
+        return sortModels(models);
+    }
+};
 
 export class OpenAIProvider implements BaseProvider {
     async execute(
@@ -9,16 +20,18 @@ export class OpenAIProvider implements BaseProvider {
     ): Promise<ProviderResponse> {
         const targetUrl = `${baseUrl || "https://api.openai.com/v1"}/chat/completions`;
 
-        // Clone the payload and override the model
         const targetPayload = {
             ...payload,
             model: providerModel
         };
 
         const headers: Record<string, string> = {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${apiKey}`
+            "Content-Type": "application/json"
         };
+
+        if (!isKeylessApiKey(apiKey)) {
+            headers["Authorization"] = `Bearer ${apiKey}`;
+        }
 
         const response = await fetch(targetUrl, {
             method: "POST",

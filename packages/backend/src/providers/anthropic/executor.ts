@@ -1,4 +1,4 @@
-import { BaseProvider, ProviderResponse } from "./BaseProvider";
+import { BaseProvider, ProviderResponse } from "../BaseProvider";
 
 class AnthropicToOpenAIStreamTransformer {
     private decoder = new TextDecoder();
@@ -104,7 +104,6 @@ export class AnthropicProvider implements BaseProvider {
     ): Promise<ProviderResponse> {
         const targetUrl = `${baseUrl || "https://api.anthropic.com/v1"}/messages`;
 
-        // Translate OpenAI payload to Anthropic
         let systemPrompt = "";
         const anthropicMessages: any[] = [];
 

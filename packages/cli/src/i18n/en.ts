@@ -50,6 +50,7 @@ export const en = {
         selectPrompt: "Select a provider:",
         freeTierBadge: "free",
         freeTierLegend: "free tier available",
+        noApiKeyRequired: "This provider does not require an API key.",
         success: "Provider successfully registered!",
         nameRequired: "Provider name is required",
         baseUrlRequired: "Base URL is required for custom providers",
@@ -214,8 +215,17 @@ export const en = {
         credentialsStale: "Server is running, but admin credentials are missing or outdated. Run 'mpx stop' then 'mpx start', or check packages/backend/initial-credentials.data.",
         credentialsLoaded: "Admin credentials loaded and saved to CLI config.",
         credentialsMissing: "Server started but credentials file not found yet. Wait a moment and run 'mpx start' again.",
-        instructionsTitle: "How to use with AI tools",
-        baseUrl: "Base URL (OpenAI-compatible):",
+        bootstrappingProviders: "Ensuring default providers and routes...",
+        bootstrapReady: "Default providers and routes are ready.",
+        bootstrapFailed: "Could not bootstrap local providers: {message}",
+        startingFreeTunnel: "Starting free public tunnel (cloudflared) for editors...",
+        freeTunnelReady: "Free tunnel URL: {url}",
+        freeTunnelReused: "Reusing free tunnel: {url}",
+        freeTunnelFailed: "Could not start free tunnel. Use MULTIPLEXUS_NO_TUNNEL=1 to skip.",
+        instructionsTitle: "How to use with AI editors (Cursor, Continue, etc.)",
+        publicBaseUrl: "Base URL (OpenAI-compatible, use in editor):",
+        suggestedModel: "Suggested router model: {model}",
+        baseUrl: "Local URL:",
         apiKey: "Your client API key (generate with 'mpx user create'):",
 
         tools: [
@@ -225,7 +235,7 @@ export const en = {
             },
             {
                 name: "Cursor",
-                instruction: "Settings > Models > Add model > set Base URL and API Key."
+                instruction: "Settings > Models > Override OpenAI Base URL = public URL above + /v1. API Key = admin key above. Model = free."
             },
             {
                 name: "Continue.dev",

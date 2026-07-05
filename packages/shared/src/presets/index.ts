@@ -15,6 +15,13 @@ import { inceptionPreset } from "./providers/InceptionPreset";
 import { openrouterPreset } from "./providers/OpenRouterPreset";
 import { customPreset } from "./providers/CustomPreset";
 
+export interface BootstrapRouteDef {
+    routerModel: string;
+    providerModel: string;
+    priority?: number;
+    weight?: number;
+}
+
 export interface ProviderPreset {
     /**
      * The value of the preset.
@@ -40,6 +47,17 @@ export interface ProviderPreset {
      * When true, the CLI may offer browser OAuth login for this provider.
      */
     browserLogin?: boolean;
+
+    /**
+     * When false, no API key is required for this upstream (anonymous / public).
+     */
+    requiresApiKey?: boolean;
+
+    /**
+     * Default routes created on local start (mpx start) for this preset.
+     */
+    bootstrapRoutes?: BootstrapRouteDef[];
+
     i18n: {
         en: {
             label: string;
@@ -93,7 +111,9 @@ export function getPresets(lang: string) {
             baseUrl: p.baseUrl,
             freeTier: info.freeTier,
             guide: info.guide,
-            browserLogin: p.browserLogin ?? false
+            browserLogin: p.browserLogin ?? false,
+            requiresApiKey: p.requiresApiKey ?? true,
+            bootstrapRoutes: p.bootstrapRoutes ?? []
         };
     });
 }

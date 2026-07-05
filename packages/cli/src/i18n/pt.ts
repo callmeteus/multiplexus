@@ -52,6 +52,7 @@ export const pt: Dictionary = {
         selectPrompt: "Selecione um provider:",
         freeTierBadge: "grátis",
         freeTierLegend: "tier gratuito disponível",
+        noApiKeyRequired: "Este provider não exige chave de API.",
         success: "Provider registrado com sucesso!",
         nameRequired: "Nome do provider é obrigatório",
         baseUrlRequired: "URL Base é obrigatória para providers customizados",
@@ -214,8 +215,17 @@ export const pt: Dictionary = {
         credentialsStale: "Servidor está rodando, mas as credenciais de admin estão ausentes ou desatualizadas. Rode 'mpx stop' e depois 'mpx start', ou veja packages/backend/initial-credentials.data.",
         credentialsLoaded: "Credenciais de administrador carregadas e salvas na configuração da CLI.",
         credentialsMissing: "Servidor iniciado, mas o arquivo de credenciais iniciais ainda não foi gerado. Aguarde um momento e execute 'mpx start' novamente.",
-        instructionsTitle: "Como usar com ferramentas de IA",
-        baseUrl: "Base URL (compatível com OpenAI):",
+        bootstrappingProviders: "Garantindo providers e rotas padrão...",
+        bootstrapReady: "Providers e rotas padrão prontos.",
+        bootstrapFailed: "Não foi possível configurar providers locais: {message}",
+        startingFreeTunnel: "Iniciando túnel público gratuito (cloudflared) para editores...",
+        freeTunnelReady: "URL do túnel gratuito: {url}",
+        freeTunnelReused: "Reutilizando túnel gratuito: {url}",
+        freeTunnelFailed: "Não foi possível iniciar o túnel gratuito. Use MULTIPLEXUS_NO_TUNNEL=1 para pular.",
+        instructionsTitle: "Como usar com editores de IA (Cursor, Continue, etc.)",
+        publicBaseUrl: "Base URL (compatível OpenAI, use no editor):",
+        suggestedModel: "Modelo roteador sugerido: {model}",
+        baseUrl: "URL local:",
         apiKey: "Sua chave de API de cliente (gere uma com 'mpx user create'):",
         tools: [
             {
@@ -224,7 +234,7 @@ export const pt: Dictionary = {
             },
             {
                 name: "Cursor",
-                instruction: "Configurações > Models > Adicione o modelo > Defina a URL Base e a Chave de API."
+                instruction: "Configurações > Models > Override OpenAI Base URL = URL pública acima + /v1. API Key = chave admin acima. Modelo = free."
             },
             {
                 name: "Continue.dev",

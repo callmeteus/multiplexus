@@ -1,16 +1,9 @@
 import {
     DiscoveredModel,
     ProviderHandler,
-    fetchOpenAICompatibleList,
     sortModels
-} from "../ProviderHandler";
+} from "../../ProviderHandler";
 
-/**
- * OpenRouter provider handler.
- * Fetches the full model catalog from the public OpenRouter API, which includes
- * live pricing data per model. No API key is required for model listing.
- * Models with prompt price "0" and completion price "0" are marked as free.
- */
 export const openrouterHandler: ProviderHandler = {
     displayName: "OpenRouter",
 
@@ -31,7 +24,6 @@ export const openrouterHandler: ProviderHandler = {
             .map((m: any) => {
                 const prompt = parseFloat(m.pricing.prompt);
                 const completion = parseFloat(m.pricing.completion);
-                // -1 is used by OpenRouter to indicate variable/dynamic pricing
                 const hasPrice = !isNaN(prompt) && prompt >= 0 && !isNaN(completion) && completion >= 0;
                 const isFree = hasPrice && prompt === 0 && completion === 0;
 
@@ -47,6 +39,3 @@ export const openrouterHandler: ProviderHandler = {
         return sortModels(models);
     }
 };
-
-// Re-export fetchOpenAICompatibleList for providers that need it
-export { fetchOpenAICompatibleList };

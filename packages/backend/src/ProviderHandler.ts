@@ -49,7 +49,32 @@ export async function fetchOpenAICompatibleList(baseUrl: string, apiKey: string)
         throw new Error(`Provider models API returned HTTP ${res.status}`);
     }
 
-    const json = await res.json() as { data?: any[] };
+    return parseOpenAIModelsResponse(await res.json());
+}
+
+/**
+ * Fetches /v1/models without Authorization (anonymous upstreams).
+ * @param baseUrl The provider base URL (without trailing slash).
+ */
+export async function fetchOpenAICompatibleListUnauthenticated(baseUrl: string): Promise<DiscoveredModel[]> {
+    const url = `${baseUrl.replace(/\/$/, "")}/models`;
+    const res = await fetch(url, {
+        headers: { "Accept": "application/json" },
+        signal: AbortSignal.timeout(10000)
+    });
+
+    if (!res.ok) {
+        throw new Error(`Provider models API returned HTTP ${res.status}`);
+    }
+
+    return parseOpenAIModelsResponse(await res.json());
+}
+
+/**
+ * Parses an OpenAI-compatible models list response.
+ * @param json The parsed JSON body.
+ */
+function parseOpenAIModelsResponse(json: { data?: any[] }): DiscoveredModel[] {
     const data = json.data || [];
 
     return data

@@ -1,6 +1,6 @@
 import * as clack from "@clack/prompts";
 import chalk from "chalk";
-import { ApiType, getPresets } from "@multiplexus/shared";
+import { ApiType, getPresets, NO_API_KEY_MARKER } from "@multiplexus/shared";
 import { ApiClient } from "../ApiClient";
 import { ensureCredentials } from "../config/LocalConfig";
 import { t, currentLang } from "../i18n/index";
@@ -165,8 +165,9 @@ export async function addProviderWizard(apiClient: ApiClient) {
     }
 
     let authMethod: "manual" | "oauth" = "manual";
+    const requiresApiKey = selectedPreset.requiresApiKey !== false;
 
-    if (selectedPreset.browserLogin) {
+    if (requiresApiKey && selectedPreset.browserLogin) {
         const authSelection = await clack.select({
             message: t.provider.keyAuthMethodPrompt,
             options: [
@@ -184,7 +185,10 @@ export async function addProviderWizard(apiClient: ApiClient) {
 
     let key = "";
 
-    if (authMethod === "oauth") {
+    if (!requiresApiKey) {
+        clack.log.info(t.provider.noApiKeyRequired);
+        key = NO_API_KEY_MARKER;
+    } else if (authMethod === "oauth") {
         clack.log.info(t.provider.oauthStarting);
 
         try {

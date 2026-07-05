@@ -1,11 +1,8 @@
 import { BaseProvider } from "./BaseProvider";
-import { OpenAIProvider } from "./OpenAIProvider";
-import { AnthropicProvider } from "./AnthropicProvider";
+import { OpenAIProvider } from "./openai";
+import { AnthropicProvider } from "./anthropic";
 import { ApiType } from "@multiplexus/shared";
 
-/**
- * The registry of providers.
- */
 const REGISTRY: Record<string, BaseProvider> = {
     [ApiType.OPENAI]: new OpenAIProvider(),
     [ApiType.ANTHROPIC]: new AnthropicProvider()
